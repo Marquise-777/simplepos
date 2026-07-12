@@ -5,21 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class InvoiceSequence extends Model
+class SaleItem extends Model
 {
     protected $fillable = [
-        'shop_id',
-        'year',
-        'month',
-        'current_number',
+        'sale_id',
+        'item_name',
+        'quantity',
+        'rate',
+        'amount',
     ];
 
     protected function casts(): array
     {
         return [
-            'year' => 'integer',
-            'month' => 'integer',
-            'current_number' => 'integer',
+            'quantity' => 'decimal:2',
+            'rate'     => 'decimal:2',
+            'amount'   => 'decimal:2',
         ];
     }
 
@@ -29,8 +30,8 @@ class InvoiceSequence extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function shop(): BelongsTo
+    public function sale(): BelongsTo
     {
-        return $this->belongsTo(Shop::class);
+        return $this->belongsTo(Sale::class);
     }
 }

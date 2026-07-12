@@ -5,21 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class InvoiceSequence extends Model
+class Subscription extends Model
 {
     protected $fillable = [
         'shop_id',
-        'year',
-        'month',
-        'current_number',
+        'plan_name',
+        'amount',
+        'billing_cycle',
+        'starts_at',
+        'expires_at',
+        'payment_reference',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'year' => 'integer',
-            'month' => 'integer',
-            'current_number' => 'integer',
+            'amount'     => 'decimal:2',
+            'starts_at'  => 'date',
+            'expires_at' => 'date',
         ];
     }
 
