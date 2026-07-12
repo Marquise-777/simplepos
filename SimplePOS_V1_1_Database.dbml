@@ -1,0 +1,156 @@
+
+//////////////////////////////////////////////////////////////
+// SimplePOS SaaS
+// Database Schema V1.1
+//////////////////////////////////////////////////////////////
+
+Table shops {
+  id bigint [pk, increment]
+  uuid char(36) [unique]
+  name varchar(150)
+  slug varchar(150) [unique]
+  owner_name varchar(100)
+  email varchar(150) [unique]
+  phone varchar(30)
+  logo varchar(255)
+  address text
+  city varchar(100)
+  state varchar(100)
+  country varchar(100)
+  status enum('active','inactive','suspended')
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table users {
+  id bigint [pk, increment]
+  uuid char(36) [unique]
+  shop_id bigint
+  name varchar(100)
+  email varchar(150) [unique]
+  phone varchar(30)
+  password varchar(255)
+  role enum('owner','manager','cashier')
+  status enum('active','inactive')
+  email_verified_at timestamp
+  remember_token varchar(100)
+  last_login_at timestamp
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table settings {
+  id bigint [pk, increment]
+  shop_id bigint [unique]
+  business_name varchar(150)
+  logo varchar(255)
+  phone varchar(30)
+  email varchar(150)
+  address text
+  invoice_prefix varchar(20)
+  invoice_template enum('classic','modern','thermal58','thermal80','a4')
+  paper_size enum('thermal58','thermal80','a4')
+  currency varchar(10)
+  timezone varchar(100)
+  date_format varchar(30)
+  gst varchar(100)
+  fssai varchar(100)
+  footer_text text
+  primary_color varchar(20)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table customers {
+  id bigint [pk, increment]
+  uuid char(36) [unique]
+  shop_id bigint
+  name varchar(100)
+  phone varchar(30)
+  email varchar(150)
+  address text
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table sales {
+  id bigint [pk, increment]
+  uuid char(36) [unique]
+  shop_id bigint
+  user_id bigint
+  customer_id bigint [null]
+  invoice_no varchar(50) [unique]
+  invoice_date datetime
+  subtotal decimal(12,2)
+  discount decimal(12,2)
+  tax decimal(12,2)
+  grand_total decimal(12,2)
+  payment_method enum('cash','upi','bank','card','mixed')
+  status enum('draft','completed','cancelled','refunded')
+  notes text
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table sale_items {
+  id bigint [pk, increment]
+  sale_id bigint
+  item_name varchar(255)
+  quantity decimal(10,2)
+  rate decimal(12,2)
+  amount decimal(12,2)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table invoice_sequences {
+  id bigint [pk, increment]
+  shop_id bigint
+  year int
+  month int
+  current_number int
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table subscriptions {
+  id bigint [pk, increment]
+  shop_id bigint
+  plan_name varchar(100)
+  amount decimal(12,2)
+  billing_cycle enum('monthly','quarterly','yearly')
+  starts_at date
+  expires_at date
+  payment_reference varchar(255)
+  status enum('active','expired','cancelled')
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table activity_logs {
+  id bigint [pk, increment]
+  shop_id bigint
+  user_id bigint
+  action varchar(150)
+  description text
+  ip_address varchar(45)
+  user_agent text
+  created_at timestamp
+}
+
+Ref: users.shop_id > shops.id
+Ref: settings.shop_id > shops.id
+Ref: customers.shop_id > shops.id
+Ref: sales.shop_id > shops.id
+Ref: sales.user_id > users.id
+Ref: sales.customer_id > customers.id
+Ref: sale_items.sale_id > sales.id
+Ref: invoice_sequences.shop_id > shops.id
+Ref: subscriptions.shop_id > shops.id
+Ref: activity_logs.shop_id > shops.id
+Ref: activity_logs.user_id > users.id
