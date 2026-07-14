@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\Traits\HasUuid;
 
 class Shop extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasUuid;
 
     protected $fillable = [
         'uuid',
@@ -24,6 +25,7 @@ class Shop extends Model
         'state',
         'country',
         'status',
+        'is_setup_complete',
     ];
 
     /*

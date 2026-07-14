@@ -18,7 +18,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->string('business_name', 150);
             $table->string('logo', 255)->nullable();
-            $table->string('phone', 30);
+            $table->string('phone', 30)->nullable();
             $table->string('email', 150)->nullable();
             $table->text('address')->nullable();
             $table->string('invoice_prefix', 20);
@@ -27,9 +27,9 @@ return new class extends Migration
             $table->string('currency', 10);
             $table->string('timezone', 100);
             $table->string('date_format', 30);
-            $table->string('gst', 100);
-            $table->string('fssai', 100);
-            $table->text('footer_text');
+            $table->string('gst', 100)->nullable();
+            $table->string('fssai', 100)->nullable();
+            $table->text('footer_text')->nullable();
             $table->string('primary_color', 20)->default('#2563eb');
             $table->timestamps();
         });

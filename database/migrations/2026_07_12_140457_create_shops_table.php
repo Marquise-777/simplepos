@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('state', 100);
             $table->string('country', 100);
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
+            $table->boolean('is_setup_complete')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

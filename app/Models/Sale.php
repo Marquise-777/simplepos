@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Traits\HasUuid;
 
 class Sale extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasUuid;
 
     protected $fillable = [
         'uuid',

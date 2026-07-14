@@ -1,0 +1,31 @@
+/* Sidebar collapsed */
+
+#sidebar.collapsed .sidebar-brand-text,
+#sidebar.collapsed .sidebar-menu-title,
+#sidebar.collapsed .sidebar-text,
+#sidebar.collapsed .sidebar-plan-card,
+#sidebar.collapsed .sidebar-footer {
+    display: none;
+}
+
+#sidebar.collapsed .sidebar-brand-link {
+    width: 100%;
+    justify-content: center;
+    gap: 0;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+#sidebar.collapsed nav a {
+    justify-content: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+#sidebar.collapsed nav a .nav-badge {
+    display: none;
+}
+
+#sidebar.collapsed .sidebar-brand-logo {
+    margin: 0;
+}
