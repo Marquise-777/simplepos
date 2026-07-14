@@ -43,12 +43,7 @@
                 </h2>
             </div>
 
-            <div class="rounded-3xl border border-slate-200 bg-white p-6">
-                <p class="text-sm text-slate-500">Average Invoice</p>
-                <h2 class="mt-3 text-3xl font-bold text-slate-900">
-                    ₹0.00
-                </h2>
-            </div>
+            <x-stat-card title="Today's Sales" value="₹18,450" icon="💰" trend="+18% from yesterday" />
 
         </div>
 
@@ -75,6 +70,7 @@
                 </div>
 
             </div>
+
 
             <div class="rounded-3xl border border-slate-200 bg-white p-6">
 
@@ -107,6 +103,17 @@
                 </div>
 
             </div>
+
+            <x-card title="Recent Sales">
+
+                <x-slot:header>
+                    <x-button variant="ghost" size="sm">
+                        View All
+                    </x-button>
+                </x-slot:header>
+
+                ...
+            </x-card>
 
         </div>
 

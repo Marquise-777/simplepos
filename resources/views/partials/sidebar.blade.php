@@ -130,11 +130,13 @@
                 30 Jun 2026
             </p>
 
-            <button
+            {{-- <button
                 class="mt-5 w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 py-3 font-medium text-white transition hover:scale-[1.02]">
                 Upgrade Plan
-            </button>
-
+            </button> --}}
+            <x-button>
+                Upgrade Plan
+            </x-button>
         </div>
 
     </div>
