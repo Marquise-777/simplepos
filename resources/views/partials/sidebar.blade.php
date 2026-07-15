@@ -41,65 +41,46 @@
         <div class="space-y-2">
 
             {{-- Dashboard --}}
-            <a href="{{ route('dashboard') }}"
-                class="flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3 font-medium transition hover:bg-blue-100">
+            <x-sidebar-link :href="route('dashboard')" icon="layout-dashboard" active="dashboard">
 
-                <i data-lucide="layout-dashboard" class="h-5 w-5" style="color: rgb(54, 85, 105)"></i>
+                Dashboard
 
-                <p class="sidebar-text" style="color: rgb(54, 85, 105)">Dashboard</p>
-
-            </a>
+            </x-sidebar-link>
 
             {{-- New Sale --}}
-            <a href="#"
-                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+            {{-- <x-sidebar-link :href="route('sales.create')" icon="plus-circle" active="sales.create" badge="+">
 
-                <i data-lucide="plus-circle" class="h-5 w-5" style="color: rgb(54, 85, 105)"></i>
+                New Sale
 
-                <p class="sidebar-text" style="color: rgb(54, 85, 105)">New Sale</p>
-
-                <span
-                    class="nav-badge ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
-                    +
-                </span>
-
-            </a>
+            </x-sidebar-link> --}}
 
             {{-- Sales --}}
-            <a href="#"
-                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+            <x-sidebar-link :href="route('sales.index')" icon="shopping-cart" active="sales.*">
 
-                <i data-lucide="shopping-cart" class="h-5 w-5" style="color: rgb(54, 85, 105)"></i>
-                <p class="sidebar-text" style="color: rgb(54, 85, 105)">Sales</p>
+                Sales
 
-            </a>
+            </x-sidebar-link>
 
             {{-- Customers --}}
-            <a href="#"
-                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+            <x-sidebar-link :href="route('customers.index')" icon="users" active="customers.*">
 
-                <i data-lucide="users" class="h-5 w-5" style="color: rgb(54, 85, 105)"></i>
-                <p class="sidebar-text" style="color: rgb(54, 85, 105)">Customers</p>
+                Customers
 
-            </a>
+            </x-sidebar-link>
 
             {{-- Reports --}}
-            <a href="#"
-                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+            <x-sidebar-link :href="route('reports.index')" icon="bar-chart-2" active="reports.*">
 
-                <i data-lucide="bar-chart-2" class="h-5 w-5" style="color: rgb(54, 85, 105)"></i>
-                <p class="sidebar-text" style="color: rgb(54, 85, 105)">Reports</p>
+                Reports
 
-            </a>
+            </x-sidebar-link>
 
             {{-- Settings --}}
-            <a href="#"
-                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+            <x-sidebar-link :href="route('settings.index')" icon="settings" active="settings.*">
 
-                <i data-lucide="settings" class="h-5 w-5" style="color: rgb(54, 85, 105)"></i>
-                <p class="sidebar-text" style="color: rgb(54, 85, 105)">Settings</p>
+                Settings
 
-            </a>
+            </x-sidebar-link>
 
         </div>
 

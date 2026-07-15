@@ -22,28 +22,13 @@
         {{-- Statistics --}}
         <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
 
-            <div class="rounded-3xl border border-slate-200 bg-white p-6">
-                <p class="text-sm text-slate-500">Today's Sales</p>
-                <h2 class="mt-3 text-3xl font-bold text-slate-900">
-                    ₹0.00
-                </h2>
-            </div>
-
-            <div class="rounded-3xl border border-slate-200 bg-white p-6">
-                <p class="text-sm text-slate-500">Invoices</p>
-                <h2 class="mt-3 text-3xl font-bold text-slate-900">
-                    0
-                </h2>
-            </div>
-
-            <div class="rounded-3xl border border-slate-200 bg-white p-6">
-                <p class="text-sm text-slate-500">Customers</p>
-                <h2 class="mt-3 text-3xl font-bold text-slate-900">
-                    0
-                </h2>
-            </div>
-
             <x-stat-card title="Today's Sales" value="₹18,450" icon="💰" trend="+18% from yesterday" />
+
+
+            <x-stat-card title="Total Sales" value="10" icon="📊" trend="+18% from yesterday" />
+
+            <x-stat-card title="Invoice" value="4" icon="📄" trend="+18% from yesterday" />
+            <x-stat-card title="Customer" value="14" icon="👥" trend="+18% from yesterday" />
 
         </div>
 
@@ -80,24 +65,28 @@
 
                 <div class="mt-6 space-y-3">
 
-                    <a href="#"
-                        class="flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 font-semibold text-white transition hover:scale-[1.02]">
-                        + New Sale
+                    <a href="#">
+                        <x-button variant="primary" size="md">
+                            + New Sale
+                        </x-button>
                     </a>
 
-                    <a href="#"
-                        class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 font-medium text-slate-700 hover:bg-slate-50">
-                        Sales History
+                    <a href="#">
+                        <x-button variant="ghost" size="md">
+                            Sales History
+                        </x-button>
                     </a>
 
-                    <a href="#"
-                        class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 font-medium text-slate-700 hover:bg-slate-50">
-                        Customers
+                    <a href="#">
+                        <x-button variant="ghost" size="md">
+                            Customers
+                        </x-button>
                     </a>
 
-                    <a href="#"
-                        class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 font-medium text-slate-700 hover:bg-slate-50">
-                        Reports
+                    <a href="#">
+                        <x-button variant="ghost" size="md">
+                            Reports
+                        </x-button>
                     </a>
 
                 </div>

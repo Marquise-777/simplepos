@@ -1,25 +1,47 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+
+    <div class="mb-8 text-center">
+
+        <h2 class="text-3xl font-bold text-slate-800">
+            Forgot Password?
+        </h2>
+
+        <p class="mt-2 text-slate-500">
+            Enter your email address and we'll send you a password reset link.
+        </p>
+
     </div>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    @if (session('status'))
+        <div class="mb-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            {{ session('status') }}
+        </div>
+    @endif
 
-    <form method="POST" action="{{ route('password.email') }}">
+    <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
         @csrf
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+        <x-input label="Email Address" name="email" type="email" placeholder="you@example.com" :value="old('email')"
+            required autofocus />
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
+        <x-button type="submit" size="lg" full>
+
+            Send Reset Link
+
+        </x-button>
+
     </form>
+
+    <div class="mt-8 text-center text-sm text-slate-500">
+
+        Remember your password?
+
+        <a href="{{ route('login') }}" class="font-semibold text-blue-600 hover:text-blue-700">
+
+            Back to Login
+
+        </a>
+
+    </div>
+
 </x-guest-layout>

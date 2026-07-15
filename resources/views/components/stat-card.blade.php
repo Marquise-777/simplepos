@@ -23,7 +23,7 @@
         </div>
 
         <div
-            class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-2xl text-white shadow-lg shadow-blue-500/20">
+            class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r  text-2xl text-white shadow-lg shadow-blue-500/20">
             {{ $icon }}
         </div>
 
