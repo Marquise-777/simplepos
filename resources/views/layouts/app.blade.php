@@ -26,6 +26,22 @@
 
 <body class="bg-slate-100 antialiased">
 
+    @if (session('success'))
+        <div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 3000)"
+            class="fixed right-6 top-6 z-[100] flex items-center gap-3 rounded-2xl border border-green-200 bg-white px-5 py-4 text-sm font-medium text-green-700 shadow-xl">
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                <i data-lucide="check" class="h-4 w-4"></i>
+            </div>
+
+            <span>{{ session('success') }}</span>
+
+            <button type="button" @click="show = false"
+                class="ml-2 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        </div>
+    @endif
+
     {{-- Sidebar --}}
     @include('partials.sidebar')
 

@@ -9,8 +9,7 @@
             </p>
         </div>
 
-        <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
-
+        <div class="rounded-3xl border border-slate-200 bg-white shadow-sm" x-data="customerSelector()">
             <div class="border-b border-slate-100 px-6 py-5">
                 <div class="flex items-center justify-between">
 
@@ -28,331 +27,370 @@
                 </div>
             </div>
 
-            <div class="space-y-6 p-6" x-data="{
-                rows: [{ item: '', qty: 1, rate: 0 }],
-                addRow() {
-                    this.rows.push({ item: '', qty: 1, rate: 0 });
-                },
-                removeRow(index) {
-                    if (this.rows.length > 1) {
-                        this.rows.splice(index, 1);
+            <form method="POST" action="{{ route('sales.store') }}">
+
+                @csrf
+
+                <div class="space-y-6 p-6" x-data="{
+                    rows: [{ item: '', qty: 1, rate: 0 }],
+                    addRow() {
+                        this.rows.push({ item: '', qty: 1, rate: 0 });
+                    },
+                    removeRow(index) {
+                        if (this.rows.length > 1) {
+                            this.rows.splice(index, 1);
+                        }
+                    },
+                    formatCurrency(value) {
+                        return new Intl.NumberFormat('en-IN', {
+                            style: 'currency',
+                            currency: 'INR',
+                            maximumFractionDigits: 2
+                        }).format(value || 0);
                     }
-                },
-                formatCurrency(value) {
-                    return new Intl.NumberFormat('en-IN', {
-                        style: 'currency',
-                        currency: 'INR',
-                        maximumFractionDigits: 2
-                    }).format(value || 0);
-                }
-            }">
+                }">
 
-                <div class="grid gap-4 lg:grid-cols-4">
+                    <div class="grid gap-4 lg:grid-cols-4">
 
-                    <div x-data="customerSelector()">
+                        <div>
 
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            Customer
-                        </label>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">
+                                Customer
+                            </label>
 
-                        <div class="flex gap-2">
+                            <div class="flex gap-2">
 
-                            <div class="relative flex-1">
+                                <div class="relative flex-1">
 
-                                <select name="customer_id" x-model="selectedCustomer"
-                                    class="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100">
+                                    <select name="customer_id" x-model="selectedCustomer"
+                                        class="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100">
 
-                                    <option value="">Walk-in Customer</option>
+                                        <option value="">Walk-in Customer</option>
 
-                                    @foreach ($customers as $customer)
-                                        <option value="{{ $customer->id }}">
-                                            {{ $customer->name }}
-                                            @if ($customer->phone)
-                                                — {{ $customer->phone }}
-                                            @endif
-                                        </option>
-                                    @endforeach
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->id }}">
+                                                {{ $customer->name }}
+                                                @if ($customer->phone)
+                                                    — {{ $customer->phone }}
+                                                @endif
+                                            </option>
+                                        @endforeach
 
-                                </select>
+                                    </select>
 
-                                <i data-lucide="chevron-down"
-                                    class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
-                                </i>
+                                    <i data-lucide="chevron-down"
+                                        class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                                    </i>
+
+                                </div>
+
+                                <button type="button" @click="openModal()"
+                                    class="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
+                                    title="Add Customer">
+
+                                    <i data-lucide="plus" class="h-5 w-5"></i>
+
+                                </button>
 
                             </div>
 
-                            <button type="button" @click="openModal()"
-                                class="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
-                                title="Add Customer">
+                        </div>
 
-                                <i data-lucide="plus" class="h-5 w-5"></i>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">
+                                Payment
+                            </label>
 
+                            <select name="payment_method"
+                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+
+                                <option value="cash">Cash</option>
+                                <option value="upi">UPI</option>
+                                <option value="card">Card</option>
+                                <option value="bank">Bank</option>
+                                <option value="mixed">Mixed</option>
+
+                            </select>
+                        </div>
+
+                        <div>
+                            <x-input label="Invoice No." value="INV-2026-000001" disabled />
+                        </div>
+
+                        <div>
+                            <x-input label="Invoice Date" name="invoice_date" type="date"
+                                value="{{ now()->format('Y-m-d') }}" />
+                        </div>
+
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-200">
+
+                        <table class="min-w-[720px] w-full">
+
+                            <thead class="bg-slate-50">
+                                <tr class="text-left text-sm font-semibold text-slate-500">
+                                    <th class="px-5 py-4">Item</th>
+                                    <th class="w-28 px-5 py-4">Qty</th>
+                                    <th class="w-40 px-5 py-4">Rate</th>
+                                    <th class="w-44 px-5 py-4">Amount</th>
+                                    <th class="w-16"></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                <template x-for="(row, index) in rows" :key="index">
+                                    <tr class="border-t border-slate-100">
+
+                                        <td class="p-5">
+                                            <input x-model="row.item" :name="`items[${index}][item_name]`"
+                                                placeholder="Enter item name"
+                                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 placeholder:text-slate-400 shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                        </td>
+
+                                        <td class="p-5">
+                                            <input x-model.number="row.qty" :name="`items[${index}][quantity]`"
+                                                type="number" min="1" step="0.01"
+                                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                        </td>
+
+                                        <td class="p-5">
+                                            <input x-model.number="row.rate" :name="`items[${index}][rate]`"
+                                                type="number" min="0" step="0.01" placeholder="0.00"
+                                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                        </td>
+
+                                        <td class="px-5">
+                                            <span class="text-xl font-bold text-slate-900"
+                                                x-text="formatCurrency(row.qty * row.rate)"></span>
+                                        </td>
+
+                                        <td class="text-center">
+                                            <button type="button" @click="removeRow(index)"
+                                                class="rounded-xl p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                                                :class="{ 'opacity-40 cursor-not-allowed': rows.length === 1 }"
+                                                :disabled="rows.length === 1">
+
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M3 6h18M8 6V4h8v2m-9 0v14a2 2 0 002 2h6a2 2 0 002-2V6" />
+
+                                                </svg>
+
+                                            </button>
+                                        </td>
+
+                                    </tr>
+                                </template>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <button type="button" @click="addRow()"
+                        class="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-5 py-3 text-sm font-medium text-slate-600 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600">
+                        <i data-lucide="plus" class="h-4 w-4"></i>
+                        Add Item
+                    </button>
+
+                    <div
+                        class="flex flex-col gap-6 border-t border-slate-100 pt-6 lg:flex-row lg:items-end lg:justify-between">
+
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">
+                                Notes
+                            </label>
+
+                            <textarea name="notes" rows="4" class="w-full rounded-2xl border border-slate-200 px-4 py-3 lg:w-[430px]"
+                                placeholder="Additional notes..."></textarea>
+                        </div>
+
+                        <div class="space-y-5">
+
+                            <div class="rounded-3xl bg-gradient-to-r from-blue-50 to-cyan-50 px-8 py-6 text-right">
+                                <p class="text-sm font-medium uppercase tracking-wide text-slate-500">
+                                    Grand Total
+                                </p>
+
+                                <h2 class="mt-2 text-5xl font-extrabold text-blue-600"
+                                    x-text="formatCurrency(
+            rows.reduce((total, row) => {
+                return total + ((parseFloat(row.qty) || 0) * (parseFloat(row.rate) || 0));
+            }, 0)
+        )">
+                                    ₹0.00
+                                </h2>
+                            </div>
+
+                            <div class="flex justify-end gap-2">
+
+                                <x-button type="button" variant="secondary" @click="window.location.reload()">
+                                    Clear
+                                </x-button>
+
+                                <x-button type="submit" variant="secondary" name="status" value="draft">
+                                    Save Draft
+                                </x-button>
+
+                                <x-button type="submit" name="status" value="completed">
+                                    Complete Sale
+                                </x-button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </form>
+
+            <div x-show="modalOpen" x-cloak x-transition.opacity
+                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+
+                <div @click.outside="closeModal()" x-transition
+                    class="w-full max-w-lg rounded-3xl bg-white shadow-2xl">
+
+                    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-900">
+                                Add Customer
+                            </h3>
+
+                            <p class="mt-1 text-sm text-slate-500">
+                                Create a customer without leaving the sale.
+                            </p>
+                        </div>
+
+                        <button type="button" @click="closeModal()"
+                            class="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+
+                            <i data-lucide="x" class="h-5 w-5"></i>
+
+                        </button>
+
+                    </div>
+
+                    <form method="POST" action="{{ route('customers.store') }}" class="space-y-5 p-6">
+
+                        @csrf
+
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">
+                                Name
+                            </label>
+
+                            <input type="text" name="name" required
+                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                                placeholder="Customer name">
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">
+                                Phone
+                            </label>
+
+                            <input type="text" name="phone"
+                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                                placeholder="Phone number">
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-2">
+
+                            <button type="button" @click="closeModal()"
+                                class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+                                Save Customer
                             </button>
 
                         </div>
 
-
-                        {{-- Add Customer Modal --}}
-                        <div x-show="modalOpen" x-cloak x-transition.opacity
-                            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-
-                            <div @click.outside="closeModal()" x-transition
-                                class="w-full max-w-lg rounded-3xl bg-white shadow-2xl">
-
-                                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-slate-900">
-                                            Add Customer
-                                        </h3>
-
-                                        <p class="mt-1 text-sm text-slate-500">
-                                            Create a customer without leaving the sale.
-                                        </p>
-                                    </div>
-
-                                    <button type="button" @click="closeModal()"
-                                        class="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
-
-                                        <i data-lucide="x" class="h-5 w-5"></i>
-
-                                    </button>
-
-                                </div>
-
-
-                                <form method="POST" action="{{ route('customers.store') }}" class="space-y-5 p-6">
-
-                                    @csrf
-
-                                    <div>
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                                            Name
-                                        </label>
-
-                                        <input type="text" name="name" required
-                                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
-                                            placeholder="Customer name">
-                                    </div>
-
-                                    <div>
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                                            Phone
-                                        </label>
-
-                                        <input type="text" name="phone"
-                                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
-                                            placeholder="Phone number">
-                                    </div>
-
-                                    <div class="flex justify-end gap-2 pt-2">
-
-                                        <button type="button" @click="closeModal()"
-                                            class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                                            Cancel
-                                        </button>
-
-                                        <button type="submit"
-                                            class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700">
-                                            Save Customer
-                                        </button>
-
-                                    </div>
-
-                                </form>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            Payment
-                        </label>
-
-                        <select
-                            class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                            <option>Cash</option>
-                            <option>UPI</option>
-                            <option>Card</option>
-                            <option>Bank</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <x-input label="Invoice No." value="INV-2026-000001" disabled />
-                    </div>
-
-                    <div>
-                        <x-input label="Invoice Date" type="date" />
-                    </div>
-
-                </div>
-
-                <div class="overflow-x-auto rounded-2xl border border-slate-200">
-
-                    <table class="min-w-[720px] w-full">
-
-                        <thead class="bg-slate-50">
-                            <tr class="text-left text-sm font-semibold text-slate-500">
-                                <th class="px-5 py-4">Item</th>
-                                <th class="w-28 px-5 py-4">Qty</th>
-                                <th class="w-40 px-5 py-4">Rate</th>
-                                <th class="w-44 px-5 py-4">Amount</th>
-                                <th class="w-16"></th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-
-                            <template x-for="(row, index) in rows" :key="index">
-                                <tr class="border-t border-slate-100">
-
-                                    <td class="p-5">
-                                        <input x-model="row.item" placeholder="Enter item name"
-                                            class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 placeholder:text-slate-400 shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                                    </td>
-
-                                    <td class="p-5">
-                                        <input x-model.number="row.qty" type="number" min="1" value="1"
-                                            class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                                    </td>
-
-                                    <td class="p-5">
-                                        <input x-model.number="row.rate" type="number" min="0" step="0.01"
-                                            placeholder="0.00"
-                                            class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 shadow-sm transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                                    </td>
-
-                                    <td class="px-5">
-                                        <span class="text-xl font-bold text-slate-900"
-                                            x-text="formatCurrency(row.qty * row.rate)"></span>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <button type="button" @click="removeRow(index)"
-                                            class="rounded-xl p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                                            :class="{ 'opacity-40 cursor-not-allowed': rows.length === 1 }"
-                                            :disabled="rows.length === 1">
-
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M3 6h18M8 6V4h8v2m-9 0v14a2 2 0 002 2h6a2 2 0 002-2V6" />
-
-                                            </svg>
-
-                                        </button>
-                                    </td>
-
-                                </tr>
-                            </template>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-                <button type="button" @click="addRow()"
-                    class="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-5 py-3 text-sm font-medium text-slate-600 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600">
-                    <i data-lucide="plus" class="h-4 w-4"></i>
-                    Add Item
-                </button>
-
-                <div
-                    class="flex flex-col gap-6 border-t border-slate-100 pt-6 lg:flex-row lg:items-end lg:justify-between">
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            Notes
-                        </label>
-
-                        <textarea rows="4" class="w-full rounded-2xl border border-slate-200 px-4 py-3 lg:w-[430px]"
-                            placeholder="Additional notes..."></textarea>
-                    </div>
-
-                    <div class="space-y-5">
-
-                        <div class="rounded-3xl bg-gradient-to-r from-blue-50 to-cyan-50 px-8 py-6 text-right">
-                            <p class="text-sm font-medium uppercase tracking-wide text-slate-500">
-                                Grand Total
-                            </p>
-
-                            <h2 class="mt-2 text-5xl font-extrabold text-blue-600">
-                                ₹0.00
-                            </h2>
-                        </div>
-
-                        <div class="flex justify-end gap-2">
-                            <x-button variant="secondary">
-                                Clear
-                            </x-button>
-
-                            <x-button>
-                                Save Sale
-                            </x-button>
-                        </div>
-
-                    </div>
+                    </form>
 
                 </div>
 
             </div>
-
         </div>
 
-        <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div class="rounded-3xl border border-slate-200 bg-white shadow-sm" x-data="salesTable({{ json_encode($sales->pluck('id')->all()) }})">
 
             {{-- Header --}}
-            <div
-                class="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="border-b border-slate-100 px-6 py-5">
+                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
 
-                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 shrink-0">
+                        <h2 class="text-lg font-semibold text-slate-900">
+                            Recent Sales
+                        </h2>
 
-                    <h2 class="text-lg font-semibold text-slate-900">
-                        Recent Sales
-                    </h2>
+                        <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                            Today
+                        </span>
+                    </div>
 
-                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                        Today
-                    </span>
+                    {{-- Filters --}}
+                    <form method="GET" action="{{ route('sales.index') }}"
+                        class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
 
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            placeholder="Search invoice, customer..."
+                            class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100 sm:w-64">
+
+                        <select name="status"
+                            class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100">
+                            <option value="all" @selected(request('status') === null || request('status') === 'all')>All Status</option>
+                            <option value="completed" @selected(request('status') === 'completed')>Completed</option>
+                            <option value="draft" @selected(request('status') === 'draft')>Draft</option>
+                            <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
+                            <option value="refunded" @selected(request('status') === 'refunded')>Refunded</option>
+                        </select>
+
+                        <input type="date" name="date_from" value="{{ request('date_from') }}"
+                            class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100">
+
+                        <input type="date" name="date_to" value="{{ request('date_to') }}"
+                            class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100">
+
+                        <button type="submit"
+                            class="rounded-2xl bg-slate-700 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800">
+                            Filter
+                        </button>
+                    </form>
+
+                    {{-- Actions --}}
+                    <div class="flex items-center gap-2 shrink-0">
+                        <x-button variant="secondary">
+                            Export
+                        </x-button>
+
+                        <form method="POST" action="{{ route('sales.bulk-delete') }}"
+                            onsubmit="return confirm('Delete selected sales? This cannot be undone.');"
+                            class="inline-block">
+                            @csrf
+                            @method('DELETE')
+
+                            <template x-for="id in selected" :key="id">
+                                <input type="hidden" name="sale_ids[]" :value="id">
+                            </template>
+
+                            <button type="submit" :disabled="selected.length === 0"
+                                class="rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40">
+                                Delete
+                                <span x-show="selected.length > 0">(<span x-text="selected.length"></span>)</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
-
-
-                <div class="flex flex-col gap-3 md:flex-row">
-
-                    <x-input class="sm:w-72" placeholder="Search invoice, customer..." />
-
-
-                    <select
-                        class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-
-                        <option>All Status</option>
-                        <option>Completed</option>
-                        <option>Draft</option>
-                        <option>Cancelled</option>
-                        <option>Refunded</option>
-
-                    </select>
-
-                </div>
-                <div class="flex items-center gap-2">
-
-                    <x-button variant="secondary">
-                        Export
-                    </x-button>
-
-                    <x-button variant="danger">
-                        Delete
-                    </x-button>
-
-                </div>
-
             </div>
 
             {{-- Table --}}
@@ -365,7 +403,8 @@
                         <tr class="text-left text-sm font-semibold text-slate-500">
 
                             <th class="w-12 px-4 py-4">
-                                <input type="checkbox">
+                                <input type="checkbox" @change="toggleAll($event)" :checked="allVisibleSelected"
+                                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                             </th>
                             <th class="px-6 py-4">Invoice</th>
                             <th class="px-6 py-4">Customer</th>
@@ -386,7 +425,10 @@
                             <tr class="transition hover:bg-slate-50">
 
                                 <td class="px-4 py-5">
-                                    <input type="checkbox" value="{{ $sale->id }}">
+                                    <input type="checkbox" value="{{ $sale->id }}"
+                                        class="sale-checkbox rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                        @change="toggle({{ $sale->id }})"
+                                        :checked="selected.includes(String({{ $sale->id }}))">
                                 </td>
 
                                 {{-- Invoice --}}
@@ -475,20 +517,34 @@
 
                                     <div class="flex items-center justify-center gap-2">
 
-                                        <button
-                                            class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                                        {{-- View --}}
+                                        <a href="{{ route('sales.show', $sale) }}"
+                                            class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                                            title="View Sale">
+
                                             <i data-lucide="eye" class="h-4 w-4"></i>
-                                        </button>
 
-                                        <button
-                                            class="rounded-xl p-2 text-blue-500 transition hover:bg-blue-50 hover:text-blue-700">
+                                        </a>
+
+
+                                        {{-- Print --}}
+                                        <a href="{{ route('sales.print', $sale) }}" target="_blank"
+                                            class="rounded-xl p-2 text-blue-500 transition hover:bg-blue-50 hover:text-blue-700"
+                                            title="Print Invoice">
+
                                             <i data-lucide="printer" class="h-4 w-4"></i>
-                                        </button>
 
-                                        <button
-                                            class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+                                        </a>
+
+
+                                        {{-- More --}}
+                                        <a href="{{ route('sales.show', $sale) }}"
+                                            class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                                            title="More">
+
                                             <i data-lucide="more-horizontal" class="h-4 w-4"></i>
-                                        </button>
+
+                                        </a>
 
                                     </div>
 
@@ -529,6 +585,44 @@
 
                 closeModal() {
                     this.modalOpen = false;
+                }
+            }
+        }
+
+        function salesTable(visibleIds = []) {
+            return {
+                selected: [],
+                visibleIds: visibleIds,
+
+                get allVisibleSelected() {
+                    if (!this.visibleIds.length) {
+                        return false;
+                    }
+
+                    return this.visibleIds.every(id => this.selected.includes(String(id)));
+                },
+
+                toggleAll(event) {
+                    const checked = event.target.checked;
+
+                    if (checked) {
+                        const ids = this.visibleIds.map(String);
+                        this.selected = [...new Set([...this.selected, ...ids])];
+                        return;
+                    }
+
+                    this.selected = this.selected.filter(id => !this.visibleIds.map(String).includes(id));
+                },
+
+                toggle(id) {
+                    const value = String(id);
+
+                    if (this.selected.includes(value)) {
+                        this.selected = this.selected.filter(item => item !== value);
+                        return;
+                    }
+
+                    this.selected.push(value);
                 }
             }
         }

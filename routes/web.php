@@ -93,7 +93,8 @@ Route::middleware([
 
     Route::post('/sales/{sale}/refund', [SaleController::class, 'refund'])
         ->name('sales.refund');
-
+    Route::delete('/sales/bulk-delete', [SaleController::class, 'bulkDelete'])
+        ->name('sales.bulk-delete');
 
     /*
     |--------------------------------------------------------------------------
