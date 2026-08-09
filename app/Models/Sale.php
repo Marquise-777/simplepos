@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Sale extends Model
 {
-    use SoftDeletes, HasUuid;
+    use SoftDeletes, HasUuid, HasFactory;
 
     protected $fillable = [
         'uuid',
@@ -61,6 +62,10 @@ class Sale extends Model
     }
 
     public function items(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+    public function saleItems()
     {
         return $this->hasMany(SaleItem::class);
     }

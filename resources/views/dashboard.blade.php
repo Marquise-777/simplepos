@@ -22,7 +22,7 @@
         {{-- Statistics --}}
         <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
 
-            <x-stat-card title="Today's Sales" value="₹18,450" icon="💰" trend="+18% from yesterday" />
+            <x-stat-card title="Today's Sales" :value="'₹' . number_format($todaySales, 2)" icon="💰" trend="Today's completed sales" />
 
 
             <x-stat-card title="Total Sales" value="10" icon="📊" trend="+18% from yesterday" />

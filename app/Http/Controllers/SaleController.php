@@ -15,12 +15,16 @@ class SaleController extends Controller
     {
         $user = Auth::user();
 
-        $sales = Sale::query()
-            ->where('shop_id', $user?->shop_id)
+        $sales = Sale::with(['customer', 'user', 'saleItems'])
+            ->where('shop_id', $user->shop_id)
             ->latest('invoice_date')
             ->paginate(15);
 
-        return view('sales.index', compact('sales'));
+        $customers = Customer::where('shop_id', Auth::user()->shop_id)
+            ->orderBy('name')
+            ->get();
+
+        return view('sales.index', compact('sales', 'customers'));
     }
 
     public function create()

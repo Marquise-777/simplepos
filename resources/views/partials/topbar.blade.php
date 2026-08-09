@@ -71,7 +71,7 @@
             </button>
 
             <!-- Dropdown -->
-            <div x-show="open" @click.away="open=false" x-transition
+            <div x-cloak x-show="open" @click.away="open=false" x-transition
                 class="absolute right-0 z-50 mt-3 w-96 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
 
                 <div class="flex items-center justify-between  p-5">
@@ -171,7 +171,7 @@
             </button>
 
             <!-- Dropdown -->
-            <div x-show="open" @click.away="open = false" x-transition
+            <div x-cloak x-show="open" @click.away="open = false" x-transition
                 class="absolute right-0 z-50 mt-3 w-64 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
 
                 <div class="border-b border-slate-100 p-5">

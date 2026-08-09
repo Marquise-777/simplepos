@@ -49,8 +49,122 @@
 
                 <div class="grid gap-4 lg:grid-cols-4">
 
-                    <div>
-                        <x-input label="Customer" placeholder="Walk-in Customer" />
+                    <div x-data="customerSelector()">
+
+                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                            Customer
+                        </label>
+
+                        <div class="flex gap-2">
+
+                            <div class="relative flex-1">
+
+                                <select name="customer_id" x-model="selectedCustomer"
+                                    class="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100">
+
+                                    <option value="">Walk-in Customer</option>
+
+                                    @foreach ($customers as $customer)
+                                        <option value="{{ $customer->id }}">
+                                            {{ $customer->name }}
+                                            @if ($customer->phone)
+                                                — {{ $customer->phone }}
+                                            @endif
+                                        </option>
+                                    @endforeach
+
+                                </select>
+
+                                <i data-lucide="chevron-down"
+                                    class="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                                </i>
+
+                            </div>
+
+                            <button type="button" @click="openModal()"
+                                class="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
+                                title="Add Customer">
+
+                                <i data-lucide="plus" class="h-5 w-5"></i>
+
+                            </button>
+
+                        </div>
+
+
+                        {{-- Add Customer Modal --}}
+                        <div x-show="modalOpen" x-cloak x-transition.opacity
+                            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+
+                            <div @click.outside="closeModal()" x-transition
+                                class="w-full max-w-lg rounded-3xl bg-white shadow-2xl">
+
+                                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-slate-900">
+                                            Add Customer
+                                        </h3>
+
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Create a customer without leaving the sale.
+                                        </p>
+                                    </div>
+
+                                    <button type="button" @click="closeModal()"
+                                        class="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+
+                                        <i data-lucide="x" class="h-5 w-5"></i>
+
+                                    </button>
+
+                                </div>
+
+
+                                <form method="POST" action="{{ route('customers.store') }}" class="space-y-5 p-6">
+
+                                    @csrf
+
+                                    <div>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                                            Name
+                                        </label>
+
+                                        <input type="text" name="name" required
+                                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                                            placeholder="Customer name">
+                                    </div>
+
+                                    <div>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                                            Phone
+                                        </label>
+
+                                        <input type="text" name="phone"
+                                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                                            placeholder="Phone number">
+                                    </div>
+
+                                    <div class="flex justify-end gap-2 pt-2">
+
+                                        <button type="button" @click="closeModal()"
+                                            class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                                            Cancel
+                                        </button>
+
+                                        <button type="submit"
+                                            class="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+                                            Save Customer
+                                        </button>
+
+                                    </div>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
                     </div>
 
                     <div>
@@ -268,105 +382,112 @@
 
                     <tbody class="divide-y divide-slate-100">
 
-                        @for ($i = 1; $i <= 5; $i++)
+                        @forelse ($sales as $sale)
                             <tr class="transition hover:bg-slate-50">
 
                                 <td class="px-4 py-5">
-                                    <input type="checkbox">
+                                    <input type="checkbox" value="{{ $sale->id }}">
                                 </td>
+
+                                {{-- Invoice --}}
                                 <td class="px-6 py-5">
-
                                     <div>
-
                                         <p class="font-semibold text-slate-900">
-                                            INV-2026-000{{ $i }}
+                                            {{ $sale->invoice_no }}
                                         </p>
 
                                         <p class="text-xs text-slate-500">
-                                            #{{ str_pad($i, 4, '0', STR_PAD_LEFT) }}
+                                            #{{ $sale->id }}
                                         </p>
-
                                     </div>
-
                                 </td>
 
+                                {{-- Customer --}}
                                 <td class="px-6 py-5">
-
                                     <div>
-
                                         <p class="font-medium text-slate-900">
-                                            Walk-in Customer
+                                            {{ $sale->customer?->name ?? 'Walk-in Customer' }}
                                         </p>
 
                                         <p class="text-xs text-slate-500">
-                                            Cashier
+                                            {{ $sale->user?->name ?? '-' }}
                                         </p>
-
                                     </div>
-
                                 </td>
 
+                                {{-- Date --}}
                                 <td class="px-6 py-5 text-slate-600">
-                                    {{ now()->format('d M Y') }}
+                                    {{ $sale->invoice_date?->format('d M Y') }}
                                 </td>
 
+                                {{-- Items --}}
                                 <td class="px-6 py-5">
                                     <span
                                         class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                                        3 Items
+                                        {{ $sale->saleItems->count() }} Items
                                     </span>
                                 </td>
 
+                                {{-- Payment --}}
                                 <td class="px-6 py-5">
+                                    @php
+                                        $paymentColors = [
+                                            'cash' => 'bg-green-100 text-green-700',
+                                            'upi' => 'bg-purple-100 text-purple-700',
+                                            'card' => 'bg-blue-100 text-blue-700',
+                                            'bank' => 'bg-yellow-100 text-yellow-700',
+                                            'mixed' => 'bg-slate-100 text-slate-700',
+                                        ];
+                                    @endphp
+
                                     <span
-                                        class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                                        Cash
+                                        class="rounded-full px-3 py-1 text-xs font-semibold {{ $paymentColors[$sale->payment_method] ?? 'bg-slate-100 text-slate-700' }}">
+                                        {{ ucfirst($sale->payment_method) }}
                                     </span>
                                 </td>
 
+                                {{-- Total --}}
                                 <td class="px-6 py-5 text-right">
-
                                     <span class="text-lg font-bold text-slate-900">
-                                        ₹350.00
+                                        ₹{{ number_format($sale->grand_total, 2) }}
                                     </span>
-
                                 </td>
 
+                                {{-- Status --}}
                                 <td class="px-6 py-5">
+                                    @php
+                                        $statusColors = [
+                                            'completed' => 'bg-green-100 text-green-700',
+                                            'draft' => 'bg-yellow-100 text-yellow-700',
+                                            'cancelled' => 'bg-red-100 text-red-700',
+                                            'refunded' => 'bg-purple-100 text-purple-700',
+                                        ];
+                                    @endphp
 
                                     <span
-                                        class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                                        Completed
+                                        class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusColors[$sale->status] ?? 'bg-slate-100 text-slate-700' }}">
+                                        {{ ucfirst($sale->status) }}
                                     </span>
-
                                 </td>
 
+                                {{-- Actions --}}
                                 <td class="px-6 py-5">
 
                                     <div class="flex items-center justify-center gap-2">
 
-                                        {{-- View --}}
                                         <button
                                             class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
-
                                             <i data-lucide="eye" class="h-4 w-4"></i>
-
                                         </button>
 
-                                        {{-- Print --}}
                                         <button
                                             class="rounded-xl p-2 text-blue-500 transition hover:bg-blue-50 hover:text-blue-700">
-
                                             <i data-lucide="printer" class="h-4 w-4"></i>
-
                                         </button>
 
-                                        {{-- More --}}
                                         <button
                                             class="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
-
                                             <i data-lucide="more-horizontal" class="h-4 w-4"></i>
-
                                         </button>
 
                                     </div>
@@ -374,16 +495,43 @@
                                 </td>
 
                             </tr>
-                        @endfor
+                        @empty
+
+                            <tr>
+                                <td colspan="9" class="px-6 py-12 text-center text-slate-500">
+                                    No sales found.
+                                </td>
+                            </tr>
+                        @endforelse
 
                     </tbody>
 
                 </table>
+                <div class=" border-slate-200 bg-white px-6 py-4">
+                    {{ $sales->links() }}
+                </div>
 
             </div>
 
         </div>
 
     </div>
+    <script>
+        function customerSelector() {
+            return {
+                modalOpen: false,
+
+                selectedCustomer: '{{ request('customer_id', '') }}',
+
+                openModal() {
+                    this.modalOpen = true;
+                },
+
+                closeModal() {
+                    this.modalOpen = false;
+                }
+            }
+        }
+    </script>
 
 </x-app-layout>

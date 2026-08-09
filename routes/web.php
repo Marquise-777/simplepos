@@ -109,7 +109,7 @@ Route::middleware([
                 ->name('index');
 
             Route::post('/create', [CustomerController::class, 'create'])
-                ->name('create');
+                ->name('store');
         });
 
 
