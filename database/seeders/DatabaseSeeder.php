@@ -34,5 +34,8 @@ class DatabaseSeeder extends Seeder
                         ->toArray()
                 );
             });
+        $this->call([
+            CreditEmiSeeder::class,
+        ]);
     }
 }

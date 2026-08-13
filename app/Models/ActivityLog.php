@@ -16,6 +16,7 @@ class ActivityLog extends Model
         'description',
         'ip_address',
         'user_agent',
+        'read_at',
         'created_at',
     ];
 
@@ -23,6 +24,7 @@ class ActivityLog extends Model
     {
         return [
             'created_at' => 'datetime',
+            'read_at' => 'datetime',
         ];
     }
 

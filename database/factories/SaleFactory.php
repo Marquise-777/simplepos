@@ -46,7 +46,8 @@ class SaleFactory extends Factory
                 'cash',
                 'upi',
                 'card',
-                'bank'
+                'bank',
+                'mixed'
             ]),
 
             'status' => fake()->randomElement([

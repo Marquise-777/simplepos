@@ -29,7 +29,8 @@ return new class extends Migration
             $table->string('date_format', 30);
             $table->string('gst', 100)->nullable();
             $table->string('fssai', 100)->nullable();
-            $table->text('footer_text')->nullable();
+            $table->text('footer_text')
+                ->nullable();
             $table->string('primary_color', 20)->default('#2563eb');
             $table->timestamps();
         });

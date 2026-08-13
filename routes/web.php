@@ -8,6 +8,26 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\CreditEmiController;
+use App\Http\Controllers\NotificationController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/credit-emi', [CreditEmiController::class, 'index'])
+        ->name('credit-emi.index');
+    Route::get('/credit-emi/{paymentPlan}', [CreditEmiController::class, 'show'])
+        ->name('credit-emi.show');
+    Route::post('/credit-emi/{paymentPlan}/payment', [CreditEmiController::class, 'recordPayment'])
+        ->name('credit-emi.payment');
+});
+
+Route::middleware('auth')->group(function () {
+
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])
+        ->name('notifications.read-all');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +74,16 @@ Route::prefix('setup')
 | SIMPOS Application
 |--------------------------------------------------------------------------
 */
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/settings', [SettingController::class, 'index'])
+        ->name('settings.index');
+
+    Route::put('/settings', [SettingController::class, 'update'])
+        ->name('settings.update');
+});
 
 Route::middleware([
     'auth',

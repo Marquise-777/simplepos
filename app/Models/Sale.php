@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Sale extends Model
 {
@@ -68,5 +69,14 @@ class Sale extends Model
     public function saleItems()
     {
         return $this->hasMany(SaleItem::class);
+    }
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SalePayment::class);
+    }
+
+    public function paymentPlan(): HasOne
+    {
+        return $this->hasOne(PaymentPlan::class);
     }
 }

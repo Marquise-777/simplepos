@@ -61,6 +61,13 @@
 
             </x-sidebar-link>
 
+            {{-- Credit & EMI --}}
+            <x-sidebar-link :href="route('credit-emi.index')" icon="credit-card" active="credit-emi.*">
+
+                Credit & EMI
+
+            </x-sidebar-link>
+
             {{-- Customers --}}
             <x-sidebar-link :href="route('customers.index')" icon="users" active="customers.*">
 

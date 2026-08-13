@@ -221,7 +221,6 @@
 
         </div>
 
-
         {{-- Summary --}}
         <div class="flex justify-end">
 
@@ -239,28 +238,35 @@
                         </span>
                     </div>
 
+                    @if ($sale->discount > 0)
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-slate-500">
+                                Discount
+                                @if ($sale->discount_type === 'percentage')
+                                    ({{ rtrim(rtrim(number_format($sale->discount_value, 2), '0'), '.') }}%)
+                                @endif
+                            </span>
 
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-slate-500">
-                            Discount
-                        </span>
+                            <span class="font-medium text-red-600">
+                                -₹{{ number_format($sale->discount, 2) }}
+                            </span>
+                        </div>
+                    @endif
 
-                        <span class="font-medium text-slate-900">
-                            ₹{{ number_format($sale->discount, 2) }}
-                        </span>
-                    </div>
+                    @if ($sale->tax > 0)
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-slate-500">
+                                Tax
+                                @if ($sale->tax_rate !== null)
+                                    ({{ rtrim(rtrim(number_format($sale->tax_rate, 2), '0'), '.') }}%)
+                                @endif
+                            </span>
 
-
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-slate-500">
-                            Tax
-                        </span>
-
-                        <span class="font-medium text-slate-900">
-                            ₹{{ number_format($sale->tax, 2) }}
-                        </span>
-                    </div>
-
+                            <span class="font-medium text-slate-900">
+                                ₹{{ number_format($sale->tax, 2) }}
+                            </span>
+                        </div>
+                    @endif
 
                     <div class="border-t border-slate-100 pt-4">
 
@@ -273,6 +279,59 @@
                             <span class="text-2xl font-extrabold text-blue-600">
                                 ₹{{ number_format($sale->grand_total, 2) }}
                             </span>
+
+                        </div>
+
+                    </div>
+
+                    {{-- Payment Summary --}}
+                    @php
+                        $paidAmount = $sale->payments->sum('amount');
+                        $outstanding = max($sale->grand_total - $paidAmount, 0);
+                    @endphp
+
+                    <div class="border-t border-slate-100 pt-4 space-y-3">
+
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-slate-500">
+                                Amount Paid
+                            </span>
+
+                            <span class="font-semibold text-green-600">
+                                ₹{{ number_format($paidAmount, 2) }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+
+                            <span class="text-sm font-semibold text-slate-700">
+                                Outstanding
+                            </span>
+
+                            <span class="text-lg font-bold {{ $outstanding > 0 ? 'text-red-600' : 'text-green-600' }}">
+                                ₹{{ number_format($outstanding, 2) }}
+                            </span>
+
+                        </div>
+
+                        <div class="pt-1 text-right">
+
+                            @if ($outstanding <= 0)
+                                <span
+                                    class="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                                    Paid in Full
+                                </span>
+                            @elseif ($paidAmount > 0)
+                                <span
+                                    class="inline-flex rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
+                                    Partially Paid
+                                </span>
+                            @else
+                                <span
+                                    class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                                    Unpaid
+                                </span>
+                            @endif
 
                         </div>
 

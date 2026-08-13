@@ -11,19 +11,19 @@
 
     $variants = [
         'primary' =>
-            'mt-5 w-full rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 py-3 font-medium text-white transition hover:scale-[1.02]',
+            'w-full rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 py-3 font-medium text-white transition hover:scale-[1.02]',
 
         'secondary' =>
-            'mt-5 w-full rounded-2xl bg-gradient-to-r from-slate-600 to-slate-500 py-3 font-medium text-white transition hover:scale-[1.02]',
+            'w-full rounded-2xl bg-gradient-to-r from-slate-600 to-slate-500 py-3 font-medium text-white transition hover:scale-[1.02]',
 
         'success' =>
-            'mt-5 w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 py-3 font-medium text-white transition hover:scale-[1.02]',
+            'w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 py-3 font-medium text-white transition hover:scale-[1.02]',
 
         'danger' =>
-            'mt-5 w-full rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 py-3 font-medium text-white transition hover:scale-[1.02]',
+            'w-full rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 py-3 font-medium text-white transition hover:scale-[1.02]',
 
         'ghost' =>
-            'mt-5 w-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus:ring-slate-200',
+            'w-full border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 focus:ring-slate-200',
     ];
 
     $sizes = [

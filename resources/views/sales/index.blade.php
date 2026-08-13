@@ -33,6 +33,52 @@
 
                 <div class="space-y-6 p-6" x-data="{
                     rows: [{ item: '', qty: 1, rate: 0 }],
+                
+                    discountType: 'fixed',
+                    discountValue: 0,
+                    taxRate: 0,
+                
+                    amountPaid: 0,
+                
+                    paymentMethod: 'cash',
+                
+                    get balanceDue() {
+                        return Math.max(this.grandTotal - (parseFloat(this.amountPaid) || 0), 0);
+                    },
+                
+                    get paymentStatus() {
+                        if (this.amountPaid <= 0) return 'credit';
+                        if (this.amountPaid < this.grandTotal) return 'partial';
+                        return 'paid';
+                    },
+                
+                    get subtotal() {
+                        return this.rows.reduce((total, row) => {
+                            return total + ((parseFloat(row.qty) || 0) * (parseFloat(row.rate) || 0));
+                        }, 0);
+                    },
+                
+                    get discountAmount() {
+                        const value = parseFloat(this.discountValue) || 0;
+                
+                        if (this.discountType === 'percentage') {
+                            return this.subtotal * (value / 100);
+                        }
+                
+                        return value;
+                    },
+                
+                    get taxableAmount() {
+                        return Math.max(this.subtotal - this.discountAmount, 0);
+                    },
+                
+                    get taxAmount() {
+                        return this.taxableAmount * ((parseFloat(this.taxRate) || 0) / 100);
+                    },
+                
+                    get grandTotal() {
+                        return this.taxableAmount + this.taxAmount;
+                    },
                     addRow() {
                         this.rows.push({ item: '', qty: 1, rate: 0 });
                     },
@@ -85,7 +131,7 @@
                                 </div>
 
                                 <button type="button" @click="openModal()"
-                                    class="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
+                                    class="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
                                     title="Add Customer">
 
                                     <i data-lucide="plus" class="h-5 w-5"></i>
@@ -98,10 +144,10 @@
 
                         <div>
                             <label class="mb-2 block text-sm font-medium text-slate-700">
-                                Payment
+                                Payment Method
                             </label>
 
-                            <select name="payment_method"
+                            <select name="payment_method" x-model="paymentMethod"
                                 class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
 
                                 <option value="cash">Cash</option>
@@ -201,6 +247,7 @@
                     <div
                         class="flex flex-col gap-6 border-t border-slate-100 pt-6 lg:flex-row lg:items-end lg:justify-between">
 
+
                         <div>
                             <label class="mb-2 block text-sm font-medium text-slate-700">
                                 Notes
@@ -209,22 +256,143 @@
                             <textarea name="notes" rows="4" class="w-full rounded-2xl border border-slate-200 px-4 py-3 lg:w-[430px]"
                                 placeholder="Additional notes..."></textarea>
                         </div>
+                        <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
+
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-slate-600">
+                                    Amount Paid
+                                </span>
+
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-slate-400">₹</span>
+
+                                    <input type="number" name="amount_paid" x-model.number="amountPaid"
+                                        @input="if (amountPaid > grandTotal) amountPaid = grandTotal"" min="0"
+                                        :max="grandTotal" step="0.01"
+                                        class="w-32 rounded-xl border border-slate-200 px-3 py-2 text-right text-sm font-medium focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                                        placeholder="0.00">
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+                                <span class="text-sm font-medium text-slate-600">
+                                    Balance Due
+                                </span>
+
+                                <span class="text-lg font-bold"
+                                    :class="balanceDue > 0 ? 'text-red-600' : 'text-green-600'"
+                                    x-text="formatCurrency(balanceDue)">
+                                </span>
+                            </div>
+
+                            <div x-show="balanceDue > 0" x-transition
+                                class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+
+                                <div class="flex items-start gap-3">
+
+                                    <i data-lucide="clock-3" class="mt-0.5 h-5 w-5 shrink-0 text-amber-600">
+                                    </i>
+
+                                    <div>
+                                        <p class="text-sm font-semibold text-amber-800">
+                                            Outstanding Payment
+                                        </p>
+
+                                        <p class="mt-1 text-sm text-amber-700">
+                                            <span x-text="formatCurrency(balanceDue)"></span>
+                                            will remain due from the customer.
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="flex items-center justify-between">
+
+                                <span class="text-sm text-slate-500">
+                                    Payment Status
+                                </span>
+
+                                <span class="rounded-full px-3 py-1 text-xs font-semibold"
+                                    :class="{
+                                        'bg-green-100 text-green-700': paymentStatus === 'paid',
+                                        'bg-yellow-100 text-yellow-700': paymentStatus === 'partial',
+                                        'bg-red-100 text-red-700': paymentStatus === 'credit'
+                                    }"
+                                    x-text="paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)">
+                                </span>
+
+                            </div>
+
+                        </div>
 
                         <div class="space-y-5">
 
-                            <div class="rounded-3xl bg-gradient-to-r from-blue-50 to-cyan-50 px-8 py-6 text-right">
-                                <p class="text-sm font-medium uppercase tracking-wide text-slate-500">
-                                    Grand Total
-                                </p>
+                            <div class="w-full max-w-md space-y-4">
 
-                                <h2 class="mt-2 text-5xl font-extrabold text-blue-600"
-                                    x-text="formatCurrency(
-            rows.reduce((total, row) => {
-                return total + ((parseFloat(row.qty) || 0) * (parseFloat(row.rate) || 0));
-            }, 0)
-        )">
-                                    ₹0.00
-                                </h2>
+
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-slate-500">Subtotal</span>
+                                    <span class="font-medium text-slate-900" x-text="formatCurrency(subtotal)"></span>
+                                </div>
+
+                                <div class="flex items-center gap-3">
+                                    <label class="text-sm font-medium text-slate-700">
+                                        Discount
+                                    </label>
+
+                                    <select name="discount_type" x-model="discountType"
+                                        class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                        <option value="fixed">₹ Fixed</option>
+                                        <option value="percentage">% Percentage</option>
+                                    </select>
+
+                                    <input type="number" name="discount_value" x-model.number="discountValue"
+                                        min="0" step="0.01"
+                                        class="w-28 rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                        placeholder="0">
+                                </div>
+
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-slate-500">Discount</span>
+                                    <span class="font-medium text-red-600"
+                                        x-text="'-' + formatCurrency(discountAmount)"></span>
+                                </div>
+
+                                <div class="flex items-center justify-between gap-4">
+                                    <label class="text-sm font-medium text-slate-700">
+                                        Tax
+                                    </label>
+
+                                    <div class="flex items-center gap-2">
+                                        <input type="number" name="tax_rate" x-model.number="taxRate"
+                                            min="0" step="0.01"
+                                            class="w-24 rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            placeholder="0">
+
+                                        <span class="text-sm text-slate-500">%</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-slate-500">Tax</span>
+                                    <span class="font-medium text-slate-900"
+                                        x-text="formatCurrency(taxAmount)"></span>
+                                </div>
+
+                                <div class="rounded-3xl bg-gradient-to-r from-blue-50 to-cyan-50 px-8 py-6 text-right">
+                                    <p class="text-sm font-medium uppercase tracking-wide text-slate-500">
+                                        Grand Total
+                                    </p>
+
+                                    <h2 class="mt-2 text-4xl font-extrabold text-gray-600"
+                                        x-text="formatCurrency(grandTotal)">
+                                        ₹0.00
+                                    </h2>
+                                </div>
+
+
                             </div>
 
                             <div class="flex justify-end gap-2">
@@ -299,6 +467,35 @@
                             <input type="text" name="phone"
                                 class="w-full rounded-2xl border border-slate-200 px-4 py-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                                 placeholder="Phone number">
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">
+                                Email
+                            </label>
+
+                            <input type="email" name="email"
+                                class="w-full rounded-xl border border-slate-200 px-4 py-3 focus:border-blue-500 focus:outline-none">
+
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">
+                                Address
+                            </label>
+
+                            <textarea name="address" rows="3"
+                                class="w-full rounded-xl border border-slate-200 px-4 py-3 focus:border-blue-500 focus:outline-none"></textarea>
+
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-slate-700">
+                                Notes
+                            </label>
+
+                            <textarea name="notes" rows="2"
+                                class="w-full rounded-xl border border-slate-200 px-4 py-3 focus:border-blue-500 focus:outline-none"></textarea>
+
                         </div>
 
                         <div class="flex justify-end gap-2 pt-2">
@@ -384,9 +581,17 @@
                             </template>
 
                             <button type="submit" :disabled="selected.length === 0"
-                                class="rounded-2xl bg-gradient-to-r from-red-600 to-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40">
+                                class="inline-flex h-[44px] items-center justify-center rounded-2xl px-5 py-2.5 text-sm font-semibold transition
+           bg-gradient-to-r from-red-600 to-rose-500 text-white
+           hover:scale-[1.02]
+           disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100">
+
                                 Delete
-                                <span x-show="selected.length > 0">(<span x-text="selected.length"></span>)</span>
+
+                                <span x-show="selected.length > 0" class="ml-1">
+                                    (<span x-text="selected.length"></span>)
+                                </span>
+
                             </button>
                         </form>
                     </div>
@@ -410,7 +615,8 @@
                             <th class="px-6 py-4">Customer</th>
                             <th class="px-6 py-4">Date</th>
                             <th class="px-6 py-4">Items</th>
-                            <th class="px-6 py-4">Payment</th>
+                            <th class="px-6 py-4">P Type</th>
+                            <th class="px-6 py-4">P Status</th>
                             <th class="px-6 py-4 text-right">Total</th>
                             <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4 text-center">Actions</th>
@@ -487,12 +693,51 @@
                                         {{ ucfirst($sale->payment_method) }}
                                     </span>
                                 </td>
+                                {{-- Payment Status --}}
+                                <td class="px-6 py-5">
+                                    @php
+                                        $paidAmount = $sale->payments->sum('amount');
+                                        $outstanding = max($sale->grand_total - $paidAmount, 0);
+                                    @endphp
+
+                                    @if ($outstanding <= 0)
+                                        <span
+                                            class="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                                            Paid
+                                        </span>
+                                    @elseif ($paidAmount > 0)
+                                        <span
+                                            class="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
+                                            Partial
+                                        </span>
+                                    @else
+                                        <span
+                                            class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                                            Unpaid
+                                        </span>
+                                    @endif
+                                </td>
 
                                 {{-- Total --}}
                                 <td class="px-6 py-5 text-right">
+                                    @php
+                                        $paidAmount = $sale->payments->sum('amount');
+                                        $outstanding = max($sale->grand_total - $paidAmount, 0);
+                                    @endphp
+
                                     <span class="text-lg font-bold text-slate-900">
                                         ₹{{ number_format($sale->grand_total, 2) }}
                                     </span>
+
+                                    @if ($outstanding > 0)
+                                        <p class="mt-1 text-xs font-medium text-red-600">
+                                            ₹{{ number_format($outstanding, 2) }} due
+                                        </p>
+                                    @else
+                                        <p class="mt-1 text-xs font-medium text-green-600">
+                                            Paid in full
+                                        </p>
+                                    @endif
                                 </td>
 
                                 {{-- Status --}}
@@ -554,7 +799,7 @@
                         @empty
 
                             <tr>
-                                <td colspan="9" class="px-6 py-12 text-center text-slate-500">
+                                <td colspan="10" class="px-6 py-12 text-center text-slate-500">
                                     No sales found.
                                 </td>
                             </tr>

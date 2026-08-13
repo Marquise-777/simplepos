@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\InvoiceSequence;
+use App\Models\PaymentPlan;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Setting;
 
 class SaleController extends Controller
 {
@@ -16,7 +18,12 @@ class SaleController extends Controller
     {
         $user = Auth::user();
 
-        $query = Sale::with(['customer', 'user', 'saleItems'])
+        $query = Sale::with([
+            'customer',
+            'user',
+            'saleItems',
+            'payments',
+        ])
             ->where('shop_id', $user->shop_id);
 
         // Search
@@ -76,6 +83,7 @@ class SaleController extends Controller
         $validated = $request->validate([
             'customer_id' => ['nullable', 'exists:customers,id'],
             'payment_method' => ['required', 'in:cash,upi,bank,card,mixed'],
+            'amount_paid' => ['required', 'numeric', 'min:0'],
             'invoice_date' => ['required', 'date'],
             'status' => ['required', 'in:draft,completed'],
             'notes' => ['nullable', 'string'],
@@ -127,7 +135,14 @@ class SaleController extends Controller
 
             $sequence->refresh();
 
-            $invoiceNumber = 'INV-' . now()->format('Ymd') . '-' .
+            $settings = Setting::firstOrCreate(
+                ['shop_id' => $shop->id],
+                ['invoice_prefix' => 'INV']
+            );
+
+            $prefix = strtoupper(trim($settings->invoice_prefix ?: 'INV'));
+
+            $invoiceNumber = $prefix . '-' . now()->format('Ymd') . '-' .
                 str_pad(
                     (string) $sequence->current_number,
                     4,
@@ -175,6 +190,43 @@ class SaleController extends Controller
                     'amount' => $quantity * $rate,
                 ]);
             }
+            $amountPaid = min(
+                (float) $validated['amount_paid'],
+                (float) $sale->grand_total
+            );
+
+            if ($amountPaid > 0) {
+                $sale->payments()->create([
+                    'amount' => $amountPaid,
+                    'payment_method' => $validated['payment_method'],
+                    'paid_at' => now(),
+                ]);
+            }
+
+            if ($amountPaid < (float) $sale->grand_total) {
+
+                $outstanding = (float) $sale->grand_total - $amountPaid;
+
+                $paymentPlan = PaymentPlan::create([
+                    'sale_id' => $sale->id,
+                    'type' => 'mutual',
+                    'down_payment' => $amountPaid,
+                    'principal_amount' => $outstanding,
+                    'total_payable' => $outstanding,
+                    'installment_amount' => $outstanding,
+                    'installment_count' => 1,
+                    'frequency' => 'custom',
+                    'start_date' => now()->toDateString(),
+                    'status' => 'active',
+                ]);
+
+                $paymentPlan->installments()->create([
+                    'due_date' => now()->toDateString(),
+                    'amount' => $outstanding,
+                    'paid_amount' => 0,
+                    'status' => 'pending',
+                ]);
+            }
 
             return $sale;
         });
@@ -194,7 +246,12 @@ class SaleController extends Controller
     {
         $this->authorizeSaleAccess($sale);
 
-        $sale->load(['customer', 'items', 'user']);
+        $sale->load([
+            'customer',
+            'items',
+            'user',
+            'payments',
+        ]);
 
         return view('sales.show', compact('sale'));
     }
