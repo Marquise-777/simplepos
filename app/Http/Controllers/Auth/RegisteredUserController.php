@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Setting;
 use App\Models\Shop;
 use App\Models\User;
@@ -61,6 +62,14 @@ class RegisteredUserController extends Controller
                 'state' => 'Default State',
                 'country' => 'Default Country',
                 'status' => 'active',
+            ]);
+            ActivityLog::create([
+                'shop_id' => $shop->id,
+                'user_id' => $user->id,
+                'action' => 'shop_created',
+                'description' => "Shop {$shop->name} was created.",
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
             ]);
 
             $user->update([

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Setting;
+use App\Models\ActivityLog;
 
 class SaleController extends Controller
 {
@@ -119,6 +120,7 @@ class SaleController extends Controller
         }
 
         $sale = DB::transaction(function () use ($validated, $user, $shop) {
+
 
             $sequence = InvoiceSequence::firstOrCreate(
                 [
@@ -231,6 +233,13 @@ class SaleController extends Controller
             return $sale;
         });
 
+        $this->logActivity(
+            $sale->status === 'draft' ? 'sale_draft_created' : 'sale_created',
+            $sale->status === 'draft'
+                ? "Invoice {$sale->invoice_no} was saved as a draft."
+                : "Invoice {$sale->invoice_no} was completed successfully.",
+        );
+
         if ($sale->status === 'draft') {
             return redirect()
                 ->route('sales.index')
@@ -271,6 +280,11 @@ class SaleController extends Controller
 
         $sale->update(['status' => 'cancelled']);
 
+        $this->logActivity(
+            'sale_cancelled',
+            "Invoice {$sale->invoice_no} was cancelled."
+        );
+
         return redirect()->back()->with('success', 'Sale cancelled successfully.');
     }
 
@@ -279,6 +293,11 @@ class SaleController extends Controller
         $this->authorizeSaleAccess($sale);
 
         $sale->update(['status' => 'refunded']);
+
+        $this->logActivity(
+            'sale_refunded',
+            "Invoice {$sale->invoice_no} was refunded."
+        );
 
         return redirect()->back()->with('success', 'Sale refunded successfully.');
     }
@@ -300,12 +319,38 @@ class SaleController extends Controller
             'sale_ids.*' => ['integer'],
         ]);
 
-        Sale::where('shop_id', $user->shop_id)
+        $sales = Sale::where('shop_id', $user->shop_id)
             ->whereIn('id', $validated['sale_ids'])
-            ->delete();
+            ->get();
+
+        foreach ($sales as $sale) {
+            $this->logActivity(
+                'sale_deleted',
+                "Invoice {$sale->invoice_no} was deleted."
+            );
+        }
+
+        $sales->each->delete();
 
         return redirect()
             ->route('sales.index')
             ->with('success', 'Selected sales deleted successfully.');
+    }
+    protected function logActivity(
+        string $action,
+        string $description,
+        ?int $userId = null,
+        ?int $shopId = null
+    ): void {
+        $user = Auth::user();
+
+        ActivityLog::create([
+            'shop_id' => $shopId ?? $user->shop_id,
+            'user_id' => $userId ?? $user->id,
+            'action' => $action,
+            'description' => $description,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
     }
 }

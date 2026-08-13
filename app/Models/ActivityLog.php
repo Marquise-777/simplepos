@@ -17,7 +17,7 @@ class ActivityLog extends Model
         'ip_address',
         'user_agent',
         'read_at',
-        'created_at',
+
     ];
 
     protected function casts(): array
@@ -25,6 +25,7 @@ class ActivityLog extends Model
         return [
             'created_at' => 'datetime',
             'read_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 
