@@ -8,6 +8,7 @@ use App\Models\SalePayment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\ActivityLogger;
 
 class CreditEmiController extends Controller
 {
@@ -140,6 +141,50 @@ class CreditEmiController extends Controller
             'outstanding'
         ));
     }
+
+    public function updateDueDate(Request $request, PaymentInstallment $installment)
+    {
+        $request->validate([
+            'due_date' => ['required', 'date'],
+        ]);
+
+        $installment->load('paymentPlan.sale');
+
+        abort_unless(
+            $installment->paymentPlan->sale->shop_id === auth()->user()->shop_id,
+            403
+        );
+
+        // Paid installments should not have their due date changed.
+        if ($installment->status === 'paid') {
+            return response()->json([
+                'message' => 'Paid installments cannot be rescheduled.',
+            ], 422);
+        }
+
+        $dueDate = \Carbon\Carbon::parse($request->due_date);
+
+        // Keep partial payments as partial.
+        // For unpaid installments, update status according to the new date.
+        $status = $installment->paid_amount > 0
+            ? 'partial'
+            : ($dueDate->isBefore(today()) ? 'overdue' : 'pending');
+
+        $installment->update([
+            'due_date' => $dueDate->toDateString(),
+            'status' => $status,
+            'notification_read_at' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'due_date' => $dueDate->format('d M Y'),
+            'due_date_input' => $dueDate->format('Y-m-d'),
+            'status' => $status,
+            'message' => 'Due date updated successfully.',
+        ]);
+    }
+
     public function recordPayment(Request $request, PaymentPlan $paymentPlan)
     {
         $request->validate([
@@ -204,6 +249,13 @@ class CreditEmiController extends Controller
                 ]);
             }
         });
+
+        ActivityLogger::log(
+            'payment_received',
+            'Payment of ₹' . number_format($request->amount, 2)
+                . ' received for invoice '
+                . $paymentPlan->sale->invoice_no
+        );
 
         return back()->with(
             'success',

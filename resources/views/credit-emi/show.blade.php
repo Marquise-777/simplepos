@@ -120,8 +120,108 @@
                                     {{ $index + 1 }}
                                 </td>
 
-                                <td class="px-5 py-4 font-medium text-slate-900">
-                                    {{ $installment->due_date->format('d M Y') }}
+                                <td class="px-5 py-4" x-data="{
+                                    editing: false,
+                                    saving: false,
+                                    date: '{{ $installment->due_date->format('Y-m-d') }}',
+                                    displayDate: '{{ $installment->due_date->format('d M Y') }}',
+                                    status: '{{ $installment->status }}',
+                                
+                                    async save() {
+                                        this.saving = true;
+                                
+                                        try {
+                                            const response = await fetch(
+                                                '{{ route('credit-emi.installment.due-date', $installment) }}', {
+                                                    method: 'PATCH',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Accept': 'application/json',
+                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                    },
+                                                    body: JSON.stringify({
+                                                        due_date: this.date
+                                                    })
+                                                }
+                                            );
+                                
+                                            const data = await response.json();
+                                
+                                            if (!response.ok) {
+                                                throw new Error(data.message || 'Unable to update due date.');
+                                            }
+                                
+                                            this.displayDate = data.due_date;
+                                            this.date = data.due_date_input;
+                                            this.status = data.status;
+                                            window.dispatchEvent(
+                                                new CustomEvent('installment-status-{{ $installment->id }}', {
+                                                    detail: data.status
+                                                })
+                                            );
+                                            this.editing = false;
+                                
+                                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                                detail: {
+                                                    type: 'success',
+                                                    message: data.message
+                                                }
+                                            }));
+                                
+                                        } catch (error) {
+                                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                                detail: {
+                                                    type: 'error',
+                                                    message: error.message
+                                                }
+                                            }));
+                                        } finally {
+                                            this.saving = false;
+                                        }
+                                    }
+                                }">
+
+                                    {{-- Display --}}
+                                    <div x-show="!editing" class="flex items-center gap-2">
+
+                                        <span class="font-medium text-slate-900" x-text="displayDate">
+                                        </span>
+
+                                        @if ($installment->status !== 'paid')
+                                            <button type="button" @click="editing = true"
+                                                class="rounded-lg p-1.5 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+                                                title="Edit due date">
+
+                                                <i data-lucide="pencil" class="h-3.5 w-3.5"></i>
+
+                                            </button>
+                                        @endif
+
+                                    </div>
+
+                                    {{-- Edit --}}
+                                    <div x-show="editing" x-cloak class="flex items-center gap-2">
+
+                                        <input type="date" x-model="date"
+                                            class="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
+
+                                        <button type="button" @click="save()" :disabled="saving"
+                                            class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+
+                                            <span x-show="!saving">Save</span>
+                                            <span x-show="saving">Saving...</span>
+
+                                        </button>
+
+                                        <button type="button" @click="editing = false" :disabled="saving"
+                                            class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
+
+                                            Cancel
+
+                                        </button>
+
+                                    </div>
+
                                 </td>
 
                                 <td class="px-5 py-4">
@@ -136,28 +236,36 @@
                                     ₹{{ number_format($remaining, 2) }}
                                 </td>
 
-                                <td class="px-5 py-4">
+                                <td class="px-5 py-4" x-data="{ status: '{{ $installment->status }}' }" x-init="window.addEventListener('installment-status-{{ $installment->id }}', event => {
+                                    status = event.detail
+                                })">
 
-                                    @if ($installment->status === 'paid')
+                                    <template x-if="status === 'paid'">
                                         <span
                                             class="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
                                             Paid
                                         </span>
-                                    @elseif($installment->status === 'overdue')
+                                    </template>
+
+                                    <template x-if="status === 'overdue'">
                                         <span class="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
                                             Overdue
                                         </span>
-                                    @elseif($installment->status === 'partial')
+                                    </template>
+
+                                    <template x-if="status === 'partial'">
                                         <span
                                             class="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
                                             Partial
                                         </span>
-                                    @else
+                                    </template>
+
+                                    <template x-if="status === 'pending'">
                                         <span
                                             class="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
                                             Pending
                                         </span>
-                                    @endif
+                                    </template>
 
                                 </td>
                                 <td class="px-5 py-4">

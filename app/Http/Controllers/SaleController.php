@@ -85,6 +85,10 @@ class SaleController extends Controller
             'customer_id' => ['nullable', 'exists:customers,id'],
             'payment_method' => ['required', 'in:cash,upi,bank,card,mixed'],
             'amount_paid' => ['required', 'numeric', 'min:0'],
+            // frontend posts discount_type and discount_value
+            'discount_type' => ['nullable', 'in:fixed,percentage'],
+            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'tax_rate' => ['nullable', 'numeric', 'min:0'],
             'invoice_date' => ['required', 'date'],
             'status' => ['required', 'in:draft,completed'],
             'notes' => ['nullable', 'string'],
@@ -162,6 +166,33 @@ class SaleController extends Controller
                 $subtotal += $quantity * $rate;
             }
 
+            // compute discount from frontend fields (supports fixed and percentage)
+            $discountType = $validated['discount_type'] ?? 'fixed';
+            $discountValue = (float) ($validated['discount_value'] ?? 0);
+
+            // Backwards-compat: support legacy `discount` field if present
+            if (array_key_exists('discount', $validated)) {
+                $discountValue = (float) $validated['discount'];
+                $discountType = 'fixed';
+            }
+
+            if ($discountType === 'percentage') {
+                $discount = round(($subtotal * $discountValue) / 100, 2);
+            } else {
+                $discount = round($discountValue, 2);
+            }
+
+            if ($discount > $subtotal) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'discount_value' => 'Discount cannot be greater than the subtotal.',
+                ]);
+            }
+
+            $taxRate = (float) ($validated['tax_rate'] ?? 0);
+            $taxAmount = round(max(0, ($subtotal - $discount) * ($taxRate / 100)), 2);
+
+            $grandTotal = $subtotal - $discount + $taxAmount;
+
             $sale = Sale::create([
                 'shop_id' => $shop->id,
                 'user_id' => $user->id,
@@ -171,9 +202,9 @@ class SaleController extends Controller
                 'invoice_date' => $validated['invoice_date'],
 
                 'subtotal' => $subtotal,
-                'discount' => 0,
-                'tax' => 0,
-                'grand_total' => $subtotal,
+                'discount' => $discount,
+                'tax' => $taxAmount,
+                'grand_total' => $grandTotal,
 
                 'payment_method' => $validated['payment_method'],
                 'status' => $validated['status'],
@@ -192,27 +223,28 @@ class SaleController extends Controller
                     'amount' => $quantity * $rate,
                 ]);
             }
-            $amountPaid = min(
-                (float) $validated['amount_paid'],
-                (float) $sale->grand_total
-            );
+            // Compare using cents to avoid floating-point rounding issues
+            $amountPaid = min((float) $validated['amount_paid'], (float) $sale->grand_total);
 
-            if ($amountPaid > 0) {
+            $paidCents = (int) round($amountPaid * 100);
+            $grandCents = (int) round((float) $sale->grand_total * 100);
+
+            if ($paidCents > 0) {
                 $sale->payments()->create([
-                    'amount' => $amountPaid,
+                    'amount' => round($paidCents / 100, 2),
                     'payment_method' => $validated['payment_method'],
                     'paid_at' => now(),
                 ]);
             }
 
-            if ($amountPaid < (float) $sale->grand_total) {
-
-                $outstanding = (float) $sale->grand_total - $amountPaid;
+            if ($paidCents < $grandCents) {
+                $outstandingCents = $grandCents - $paidCents;
+                $outstanding = round($outstandingCents / 100, 2);
 
                 $paymentPlan = PaymentPlan::create([
                     'sale_id' => $sale->id,
                     'type' => 'mutual',
-                    'down_payment' => $amountPaid,
+                    'down_payment' => round($paidCents / 100, 2),
                     'principal_amount' => $outstanding,
                     'total_payable' => $outstanding,
                     'installment_amount' => $outstanding,

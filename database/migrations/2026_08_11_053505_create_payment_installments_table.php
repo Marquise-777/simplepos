@@ -33,6 +33,9 @@ return new class extends Migration
             ])->default('pending');
 
             $table->dateTime('paid_at')->nullable();
+            $table->timestamp('notification_read_at')
+                ->nullable()
+                ->after('paid_at');
 
             $table->timestamps();
         });

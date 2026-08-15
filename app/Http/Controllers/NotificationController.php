@@ -13,6 +13,17 @@ class NotificationController extends Controller
     {
         $shopId = $request->user()->shop_id;
 
+        $page = max(1, (int) $request->get('page', 1));
+        $perPage = 10;
+
+        $notificationActions = [
+            'sale_created',
+            'payment_received',
+            'sale_cancelled',
+            'sale_refunded',
+            'credit_created',
+        ];
+
         /*
         |--------------------------------------------------------------------------
         | Activity notifications
@@ -20,8 +31,8 @@ class NotificationController extends Controller
         */
 
         $activityNotifications = ActivityLog::where('shop_id', $shopId)
+            ->whereIn('action', $notificationActions)
             ->latest()
-            ->limit(10)
             ->get()
             ->map(function ($notification) {
                 return [
@@ -32,12 +43,14 @@ class NotificationController extends Controller
                         ? $notification->created_at->diffForHumans()
                         : 'Just now',
                     'unread' => is_null($notification->read_at),
+                    'priority' => 4,
+                    'sort_time' => $notification->created_at?->timestamp ?? 0,
                 ];
             });
 
         /*
         |--------------------------------------------------------------------------
-        | Credit / EMI due notifications
+        | Credit / EMI notifications
         |--------------------------------------------------------------------------
         */
 
@@ -64,11 +77,16 @@ class NotificationController extends Controller
                     return null;
                 }
 
-                $customerName = $installment->paymentPlan->sale->customer->name
-                    ?? 'Customer';
+                $customerName = $installment
+                    ->paymentPlan
+                    ->sale
+                    ->customer
+                    ->name ?? 'Customer';
 
                 $dueDate = $installment->due_date->startOfDay();
                 $today = today();
+
+                $unread = is_null($installment->notification_read_at);
 
                 if ($dueDate->lt($today)) {
 
@@ -76,6 +94,8 @@ class NotificationController extends Controller
 
                     return [
                         'id' => 'credit-overdue-' . $installment->id,
+                        'type' => 'credit',
+                        'installment_id' => $installment->id,
                         'title' => 'Credit payment overdue',
                         'message' => "{$customerName} has ₹" .
                             number_format($remaining, 2) .
@@ -83,8 +103,9 @@ class NotificationController extends Controller
                         'time' => $days === 1
                             ? '1 day overdue'
                             : "{$days} days overdue",
-                        'unread' => true,
+                        'unread' => $unread,
                         'priority' => 1,
+                        'sort_time' => $dueDate->timestamp,
                     ];
                 }
 
@@ -92,13 +113,16 @@ class NotificationController extends Controller
 
                     return [
                         'id' => 'credit-due-' . $installment->id,
+                        'type' => 'credit',
+                        'installment_id' => $installment->id,
                         'title' => 'Credit payment due today',
                         'message' => "{$customerName} has ₹" .
                             number_format($remaining, 2) .
                             " due today.",
                         'time' => 'Due today',
-                        'unread' => true,
+                        'unread' => $unread,
                         'priority' => 2,
+                        'sort_time' => $dueDate->timestamp,
                     ];
                 }
 
@@ -106,6 +130,8 @@ class NotificationController extends Controller
 
                 return [
                     'id' => 'credit-soon-' . $installment->id,
+                    'type' => 'credit',
+                    'installment_id' => $installment->id,
                     'title' => 'Credit payment due soon',
                     'message' => "{$customerName} has ₹" .
                         number_format($remaining, 2) .
@@ -113,8 +139,9 @@ class NotificationController extends Controller
                     'time' => $days === 1
                         ? 'Due tomorrow'
                         : "Due in {$days} days",
-                    'unread' => true,
+                    'unread' => $unread,
                     'priority' => 3,
+                    'sort_time' => $dueDate->timestamp,
                 ];
             })
             ->filter()
@@ -126,30 +153,93 @@ class NotificationController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $notifications = $activityNotifications
+        $allNotifications = $activityNotifications
             ->concat($creditNotifications)
             ->sortBy([
                 ['unread', 'desc'],
                 ['priority', 'asc'],
+                ['sort_time', 'desc'],
             ])
-            ->take(10)
             ->values();
+
+        $unreadCount = $allNotifications
+            ->where('unread', true)
+            ->count();
+
+        $total = $allNotifications->count();
+
+        $notifications = $allNotifications
+            ->slice(($page - 1) * $perPage, $perPage)
+            ->values();
+
+        $hasMore = ($page * $perPage) < $total;
 
         return response()->json([
             'notifications' => $notifications,
-            'unreadCount' => $notifications
-                ->where('unread', true)
-                ->count(),
+            'unreadCount' => $unreadCount,
+            'pagination' => [
+                'currentPage' => $page,
+                'perPage' => $perPage,
+                'total' => $total,
+                'lastPage' => (int) ceil($total / $perPage),
+                'hasMore' => $hasMore,
+            ],
         ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mark all notifications as read
+    |--------------------------------------------------------------------------
+    */
+
     public function markAllRead(Request $request): JsonResponse
     {
-        ActivityLog::where('shop_id', $request->user()->shop_id)
+        $shopId = $request->user()->shop_id;
+
+        // Activity notifications
+        ActivityLog::where('shop_id', $shopId)
             ->whereNull('read_at')
             ->update([
                 'read_at' => now(),
             ]);
+
+        // Credit / EMI notifications
+        PaymentInstallment::whereHas('paymentPlan.sale', function ($query) use ($shopId) {
+            $query->where('shop_id', $shopId);
+        })
+            ->whereIn('status', ['pending', 'partial', 'overdue'])
+            ->whereDate('due_date', '<=', today()->addDays(3))
+            ->whereNull('notification_read_at')
+            ->update([
+                'notification_read_at' => now(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mark one credit notification as read
+    |--------------------------------------------------------------------------
+    */
+
+    public function markCreditRead(
+        Request $request,
+        PaymentInstallment $installment
+    ): JsonResponse {
+        $installment->load('paymentPlan.sale');
+
+        abort_unless(
+            $installment->paymentPlan->sale->shop_id === $request->user()->shop_id,
+            403
+        );
+
+        $installment->update([
+            'notification_read_at' => now(),
+        ]);
 
         return response()->json([
             'success' => true,
@@ -159,15 +249,11 @@ class NotificationController extends Controller
     private function formatTitle(string $action): string
     {
         return match ($action) {
-            'shop_created' => 'Shop created',
-            'shop_setup_completed' => 'Shop setup completed',
             'sale_created' => 'New sale completed',
             'payment_received' => 'Payment received',
             'sale_cancelled' => 'Sale cancelled',
             'sale_refunded' => 'Sale refunded',
             'credit_created' => 'Credit sale recorded',
-            'installment_due' => 'Installment due',
-            'installment_overdue' => 'Installment overdue',
             default => ucwords(str_replace('_', ' ', $action)),
         };
     }

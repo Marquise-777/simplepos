@@ -14,6 +14,7 @@ class PaymentInstallment extends Model
         'paid_amount',
         'status',
         'paid_at',
+        'notification_read_at',
     ];
 
     protected $casts = [
@@ -21,6 +22,7 @@ class PaymentInstallment extends Model
         'amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'paid_at' => 'datetime',
+        'notification_read_at' => 'datetime',
     ];
 
     public function paymentPlan(): BelongsTo

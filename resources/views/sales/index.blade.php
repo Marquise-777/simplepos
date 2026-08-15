@@ -245,7 +245,7 @@
                     </button>
 
                     <div
-                        class="flex flex-col gap-6 border-t border-slate-100 pt-6 lg:flex-row lg:items-end lg:justify-between">
+                        class="flex flex-col gap-6 border-t border-slate-100 pt-6 lg:flex-row lg:items-center lg:justify-between">
 
 
                         <div>
@@ -256,146 +256,119 @@
                             <textarea name="notes" rows="4" class="w-full rounded-2xl border border-slate-200 px-4 py-3 lg:w-[430px]"
                                 placeholder="Additional notes..."></textarea>
                         </div>
-                        <div class="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-slate-600">
-                                    Amount Paid
-                                </span>
+                            <!-- Payment box -->
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <label class="mb-2 block text-sm font-medium text-slate-700">Amount Paid</label>
 
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm text-slate-400">₹</span>
-
+                                    <span class="text-sm text-slate-500">₹</span>
                                     <input type="number" name="amount_paid" x-model.number="amountPaid"
-                                        @input="if (amountPaid > grandTotal) amountPaid = grandTotal"" min="0"
+                                        @input="if (amountPaid > grandTotal) amountPaid = grandTotal" min="0"
                                         :max="grandTotal" step="0.01"
                                         class="w-32 rounded-xl border border-slate-200 px-3 py-2 text-right text-sm font-medium focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
                                         placeholder="0.00">
                                 </div>
-                            </div>
 
-                            <div class="flex items-center justify-between border-t border-slate-100 pt-4">
-                                <span class="text-sm font-medium text-slate-600">
-                                    Balance Due
-                                </span>
-
-                                <span class="text-lg font-bold"
-                                    :class="balanceDue > 0 ? 'text-red-600' : 'text-green-600'"
-                                    x-text="formatCurrency(balanceDue)">
-                                </span>
-                            </div>
-
-                            <div x-show="balanceDue > 0" x-transition
-                                class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-
-                                <div class="flex items-start gap-3">
-
-                                    <i data-lucide="clock-3" class="mt-0.5 h-5 w-5 shrink-0 text-amber-600">
-                                    </i>
-
-                                    <div>
-                                        <p class="text-sm font-semibold text-amber-800">
-                                            Outstanding Payment
-                                        </p>
-
-                                        <p class="mt-1 text-sm text-amber-700">
-                                            <span x-text="formatCurrency(balanceDue)"></span>
-                                            will remain due from the customer.
-                                        </p>
+                                <div class="mt-4 border-t border-slate-100 pt-3">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-slate-500">Balance Due</span>
+                                        <span class="text-lg font-bold"
+                                            :class="balanceDue > 0 ? 'text-red-600' : 'text-green-600'"
+                                            x-text="formatCurrency(balanceDue)"></span>
                                     </div>
 
-                                </div>
+                                    <div class="mt-3 flex items-center justify-between">
+                                        <span class="text-sm text-slate-500">Payment Status</span>
+                                        <span class="rounded-full px-3 py-1 text-xs font-semibold"
+                                            :class="{
+                                                'bg-green-100 text-green-700': paymentStatus === 'paid',
+                                                'bg-yellow-100 text-yellow-700': paymentStatus === 'partial',
+                                                'bg-red-100 text-red-700': paymentStatus === 'credit'
+                                            }"
+                                            x-text="paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)">
+                                        </span>
+                                    </div>
 
+                                    <div x-show="balanceDue > 0" x-transition
+                                        class="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                                        <div class="flex items-start gap-3">
+                                            <i data-lucide="clock-3"
+                                                class="mt-0.5 h-5 w-5 shrink-0 text-amber-600"></i>
+                                            <div>
+                                                <p class="text-sm font-semibold text-amber-800">Outstanding Payment</p>
+                                                <p class="mt-1 text-sm text-amber-700"><span
+                                                        x-text="formatCurrency(balanceDue)"></span> will remain due
+                                                    from the customer.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="flex items-center justify-between">
+                            <!-- Summary box -->
+                            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-slate-500">Subtotal</span>
+                                    <span class="font-medium text-slate-900" x-text="formatCurrency(subtotal)"></span>
+                                </div>
 
-                                <span class="text-sm text-slate-500">
-                                    Payment Status
-                                </span>
+                                <div class="mt-3">
+                                    <label class="mb-2 block text-sm font-medium text-slate-700">Discount</label>
+                                    <div class="flex items-center gap-2">
+                                        <select name="discount_type" x-model="discountType"
+                                            class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                                            <option value="fixed">₹ Fixed</option>
+                                            <option value="percentage">% Percentage</option>
+                                        </select>
 
-                                <span class="rounded-full px-3 py-1 text-xs font-semibold"
-                                    :class="{
-                                        'bg-green-100 text-green-700': paymentStatus === 'paid',
-                                        'bg-yellow-100 text-yellow-700': paymentStatus === 'partial',
-                                        'bg-red-100 text-red-700': paymentStatus === 'credit'
-                                    }"
-                                    x-text="paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)">
-                                </span>
+                                        <input type="number" name="discount_value" x-model.number="discountValue"
+                                            min="0" step="0.01"
+                                            class="w-28 rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            placeholder="0">
+                                    </div>
 
+                                    <div class="mt-2 flex items-center justify-between text-sm">
+                                        <span class="text-slate-500">Discount</span>
+                                        <span class="font-medium text-red-600">-<span
+                                                x-text="formatCurrency(discountAmount)"></span></span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <label class="text-sm font-medium text-slate-700">Tax</label>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" name="tax_rate" x-model.number="taxRate"
+                                                min="0" step="0.01"
+                                                class="w-20 rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                                placeholder="0">
+                                            <span class="text-sm text-slate-500">%</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-2 flex items-center justify-between text-sm">
+                                        <span class="text-slate-500">Tax</span>
+                                        <span class="font-medium text-slate-900"
+                                            x-text="formatCurrency(taxAmount)"></span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 border-t border-slate-100 pt-4">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-base font-semibold text-slate-700">Grand Total</span>
+                                        <span class="text-2xl font-extrabold text-blue-600"
+                                            x-text="formatCurrency(grandTotal)"></span>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
 
                         <div class="space-y-5">
 
-                            <div class="w-full max-w-md space-y-4">
-
-
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-slate-500">Subtotal</span>
-                                    <span class="font-medium text-slate-900" x-text="formatCurrency(subtotal)"></span>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <label class="text-sm font-medium text-slate-700">
-                                        Discount
-                                    </label>
-
-                                    <select name="discount_type" x-model="discountType"
-                                        class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
-                                        <option value="fixed">₹ Fixed</option>
-                                        <option value="percentage">% Percentage</option>
-                                    </select>
-
-                                    <input type="number" name="discount_value" x-model.number="discountValue"
-                                        min="0" step="0.01"
-                                        class="w-28 rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                        placeholder="0">
-                                </div>
-
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-slate-500">Discount</span>
-                                    <span class="font-medium text-red-600"
-                                        x-text="'-' + formatCurrency(discountAmount)"></span>
-                                </div>
-
-                                <div class="flex items-center justify-between gap-4">
-                                    <label class="text-sm font-medium text-slate-700">
-                                        Tax
-                                    </label>
-
-                                    <div class="flex items-center gap-2">
-                                        <input type="number" name="tax_rate" x-model.number="taxRate"
-                                            min="0" step="0.01"
-                                            class="w-24 rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            placeholder="0">
-
-                                        <span class="text-sm text-slate-500">%</span>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-slate-500">Tax</span>
-                                    <span class="font-medium text-slate-900"
-                                        x-text="formatCurrency(taxAmount)"></span>
-                                </div>
-
-                                <div class="rounded-3xl bg-gradient-to-r from-blue-50 to-cyan-50 px-8 py-6 text-right">
-                                    <p class="text-sm font-medium uppercase tracking-wide text-slate-500">
-                                        Grand Total
-                                    </p>
-
-                                    <h2 class="mt-2 text-4xl font-extrabold text-gray-600"
-                                        x-text="formatCurrency(grandTotal)">
-                                        ₹0.00
-                                    </h2>
-                                </div>
-
-
-                            </div>
-
-                            <div class="flex justify-end gap-2">
+                            <div class="flex gap-2">
 
                                 <x-button type="button" variant="secondary" @click="window.location.reload()">
                                     Clear

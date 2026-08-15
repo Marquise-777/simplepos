@@ -10,6 +10,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\CreditEmiController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ActivityLogController;
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/credit-emi', [CreditEmiController::class, 'index'])
@@ -18,7 +20,20 @@ Route::middleware(['auth'])->group(function () {
         ->name('credit-emi.show');
     Route::post('/credit-emi/{paymentPlan}/payment', [CreditEmiController::class, 'recordPayment'])
         ->name('credit-emi.payment');
+    Route::patch(
+        '/credit-emi/installments/{installment}/due-date',
+        [CreditEmiController::class, 'updateDueDate']
+    )->name('credit-emi.installment.due-date');
 });
+
+// Activity Log Controller
+
+Route::middleware(['auth', 'setup.completed'])->group(function () {
+
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+        ->name('activity-logs.index');
+});
+
 
 Route::middleware('auth')->group(function () {
 
@@ -27,6 +42,9 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])
         ->name('notifications.read-all');
+
+    Route::post('/notifications/credit/{installment}/read', [NotificationController::class, 'markCreditRead'])
+        ->name('notifications.credit.read');
 });
 
 /*
@@ -168,6 +186,8 @@ Route::middleware([
 
             Route::get('/monthly', [ReportController::class, 'monthly'])
                 ->name('monthly');
+            Route::get('/credit', [ReportController::class, 'credit'])
+                ->name('credit');
         });
 
 

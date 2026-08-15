@@ -27,21 +27,34 @@
             open: false,
             loading: false,
             notifications: [],
+            page: 1,
+            hasMore: true,
+            loading: false,
         
-            get unreadCount() {
-                return this.notifications.filter(n => n.unread).length;
-            },
+            unreadCount: 0,
         
-            async loadNotifications() {
+            async loadNotifications(reset = false) {
+                if (this.loading) return;
+        
+                if (reset) {
+                    this.page = 1;
+                    this.hasMore = true;
+                    this.notifications = [];
+                }
+        
+                if (!this.hasMore) return;
+        
                 this.loading = true;
         
                 try {
-                    const response = await fetch('{{ route('notifications.index') }}', {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
+                    const response = await fetch(
+                        `{{ route('notifications.index') }}?page=${this.page}`, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
                         }
-                    });
+                    );
         
                     if (!response.ok) {
                         throw new Error('Failed to load notifications');
@@ -49,7 +62,20 @@
         
                     const data = await response.json();
         
-                    this.notifications = data.notifications ?? [];
+                    this.notifications = [
+                        ...this.notifications,
+                        ...(data.notifications ?? [])
+                    ];
+        
+                    this.unreadCount = data.unreadCount ?? 0;
+        
+        
+                    this.hasMore = data.pagination?.hasMore ?? false;
+        
+                    if (this.hasMore) {
+                        this.page++;
+                    }
+        
                 } catch (error) {
                     console.error('Notification loading failed:', error);
                 } finally {
@@ -111,7 +137,8 @@
                     </button>
                 </div>
 
-                <div class="max-h-96 overflow-y-auto">
+                <div class="max-h-96 overflow-y-auto"
+                    @scroll="if ($event.target.scrollTop + $event.target.clientHeight >= $event.target.scrollHeight - 50) loadNotifications()">
 
                     {{-- Loading --}}
                     <div x-show="loading" class="p-8 text-center text-sm text-slate-400">
@@ -157,10 +184,14 @@
 
                 </div>
 
-                <div class="border-t border-slate-100 p-4 text-center">
-                    <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-700">
-                        View All Notifications
-                    </a>
+                <div x-show="loading && notifications.length > 0"
+                    class="border-t border-slate-100 p-4 text-center text-sm text-slate-400">
+                    Loading more...
+                </div>
+
+                <div x-show="!loading && !hasMore && notifications.length > 0"
+                    class="border-t border-slate-100 p-4 text-center text-xs text-slate-400">
+                    You're all caught up.
                 </div>
             </div>
 

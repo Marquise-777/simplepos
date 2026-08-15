@@ -81,6 +81,22 @@
                 </p>
 
             </a>
+            <a href="{{ route('reports.credit') }}"
+                class="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+
+                <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                    <i data-lucide="badge-dollar-sign"></i>
+                </div>
+
+                <h2 class="font-semibold text-slate-900">
+                    Credit Report
+                </h2>
+
+                <p class="mt-1 text-sm text-slate-500">
+                    Track outstanding credit, collections and overdue dues.
+                </p>
+
+            </a>
 
         </div>
 

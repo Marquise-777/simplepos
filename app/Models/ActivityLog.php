@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ActivityLog extends Model
 {
-    public $timestamps = false;
 
     protected $fillable = [
         'shop_id',

@@ -30,16 +30,13 @@ class Sale extends Model
         'notes',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'invoice_date' => 'datetime',
-            'subtotal'     => 'decimal:2',
-            'discount'     => 'decimal:2',
-            'tax'          => 'decimal:2',
-            'grand_total'  => 'decimal:2',
-        ];
-    }
+    protected $casts = [
+        'invoice_date' => 'datetime',
+        'subtotal'     => 'decimal:2',
+        'discount'     => 'decimal:2',
+        'tax'          => 'decimal:2',
+        'grand_total'  => 'decimal:2',
+    ];
 
     /*
     |--------------------------------------------------------------------------
