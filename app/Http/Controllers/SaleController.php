@@ -288,6 +288,7 @@ class SaleController extends Controller
         $this->authorizeSaleAccess($sale);
 
         $sale->load([
+            'shop.settings',
             'customer',
             'items',
             'user',

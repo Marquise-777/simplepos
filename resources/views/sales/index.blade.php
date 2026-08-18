@@ -2,12 +2,12 @@
 
     <div class="space-y-6">
 
-        <div>
+        {{-- <div>
             <h1 class="text-2xl font-bold text-slate-900">Sales</h1>
             <p class="mt-1 text-sm text-slate-500">
                 Create a sale and manage your recent invoices.
             </p>
-        </div>
+        </div> --}}
 
         <div class="rounded-3xl border border-slate-200 bg-white shadow-sm" x-data="customerSelector()">
             <div class="border-b border-slate-100 px-6 py-5">

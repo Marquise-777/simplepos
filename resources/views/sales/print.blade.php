@@ -267,6 +267,10 @@
                 width: calc(100% - 40px);
                 margin: 20px;
             }
+
+
+
+
         }
     </style>
 </head>
@@ -284,22 +288,40 @@
 
             <div>
 
+                @php
+                    $settings = $sale->shop?->settings;
+                @endphp
+
+                @if ($sale->shop?->settings?->logo)
+                    <img src="{{ asset('storage/' . $sale->shop->settings->logo) }}"
+                        alt="{{ $sale->shop->settings->business_name ?? 'Business Logo' }}" class="business-logo"
+                        style="max-width: 100px; max-height: 100px;">
+                @endif
+
                 <h1 class="business-name">
-                    {{ auth()->user()->shop->settings->business_name ?? (auth()->user()->shop->name ?? 'My Store') }}
+                    {{ $settings?->business_name ?? ($sale->shop?->name ?? 'My Store') }}
                 </h1>
 
                 <div class="business-details">
 
-                    @if ($sale->shop?->address)
-                        {{ $sale->shop->address }}<br>
+                    @if ($settings?->address)
+                        {{ $settings->address }}<br>
                     @endif
 
-                    @if ($sale->shop?->phone)
-                        Phone: {{ $sale->shop->phone }}<br>
+                    @if ($settings?->phone)
+                        Phone: {{ $settings->phone }}<br>
                     @endif
 
-                    @if ($sale->shop?->email)
-                        Email: {{ $sale->shop->email }}
+                    @if ($settings?->email)
+                        Email: {{ $settings->email }}<br>
+                    @endif
+
+                    @if ($settings?->gst)
+                        GST: {{ $settings->gst }}<br>
+                    @endif
+
+                    @if ($settings?->fssai)
+                        FSSAI: {{ $settings->fssai }}
                     @endif
 
                 </div>
