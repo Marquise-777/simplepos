@@ -302,9 +302,23 @@ class SaleController extends Controller
     {
         $this->authorizeSaleAccess($sale);
 
-        $sale->load(['customer', 'items', 'user']);
+        $sale->load([
+            'customer',
+            'items',
+            'user',
+            'payments',
+            'shop.settings',
+        ]);
 
-        return view('sales.print', compact('sale'));
+        $paperSize = $sale->shop->settings?->paper_size ?? 'a4';
+
+        $view = match ($paperSize) {
+            'thermal58' => 'sales.thermal-58',
+            'thermal80' => 'sales.thermal-80',
+            default => 'sales.print',
+        };
+
+        return view($view, compact('sale'));
     }
 
     public function cancel(Sale $sale)
